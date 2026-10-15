@@ -1,6 +1,6 @@
 /*
- * SAP Subscription Service API
- * Auto-generated OpenAPI 3.0 specification for SAP subscription
+ * SAP Allowances Service API
+ * Auto-generated OpenAPI 3.0 specification for SAP allowances
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package projectsap.sap.subscription.model;
+package projectsap.sap.allowances.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -29,46 +29,46 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * SubscriptionCancellationPolicy
+ * AllowancesMetaData
  */
 @JsonPropertyOrder({
-  SubscriptionCancellationPolicy.JSON_PROPERTY_ALLOW_MID_BILL_CYCLE_EXPIRATION
+  AllowancesMetaData.JSON_PROPERTY_VERSION
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-08T23:47:29.174054300+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
-public class SubscriptionCancellationPolicy {
-  public static final String JSON_PROPERTY_ALLOW_MID_BILL_CYCLE_EXPIRATION = "allowMidBillCycleExpiration";
-  private Boolean allowMidBillCycleExpiration;
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-10T22:42:51.230684900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+public class AllowancesMetaData {
+  public static final String JSON_PROPERTY_VERSION = "version";
+  private Integer version;
 
-  public SubscriptionCancellationPolicy() { 
+  public AllowancesMetaData() { 
   }
 
-  public SubscriptionCancellationPolicy allowMidBillCycleExpiration(Boolean allowMidBillCycleExpiration) {
-    this.allowMidBillCycleExpiration = allowMidBillCycleExpiration;
+  public AllowancesMetaData version(Integer version) {
+    this.version = version;
     return this;
   }
 
    /**
-   * Get allowMidBillCycleExpiration
-   * @return allowMidBillCycleExpiration
+   * Get version
+   * @return version
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ALLOW_MID_BILL_CYCLE_EXPIRATION)
+  @JsonProperty(JSON_PROPERTY_VERSION)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Boolean getAllowMidBillCycleExpiration() {
-    return allowMidBillCycleExpiration;
+  public Integer getVersion() {
+    return version;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ALLOW_MID_BILL_CYCLE_EXPIRATION)
+  @JsonProperty(JSON_PROPERTY_VERSION)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAllowMidBillCycleExpiration(Boolean allowMidBillCycleExpiration) {
-    this.allowMidBillCycleExpiration = allowMidBillCycleExpiration;
+  public void setVersion(Integer version) {
+    this.version = version;
   }
 
 
   /**
-   * Return true if this SubscriptionCancellationPolicy object is equal to o.
+   * Return true if this AllowancesMetaData object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -78,20 +78,20 @@ public class SubscriptionCancellationPolicy {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionCancellationPolicy subscriptionCancellationPolicy = (SubscriptionCancellationPolicy) o;
-    return Objects.equals(this.allowMidBillCycleExpiration, subscriptionCancellationPolicy.allowMidBillCycleExpiration);
+    AllowancesMetaData allowancesMetaData = (AllowancesMetaData) o;
+    return Objects.equals(this.version, allowancesMetaData.version);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(allowMidBillCycleExpiration);
+    return Objects.hash(version);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionCancellationPolicy {\n");
-    sb.append("    allowMidBillCycleExpiration: ").append(toIndentedString(allowMidBillCycleExpiration)).append("\n");
+    sb.append("class AllowancesMetaData {\n");
+    sb.append("    version: ").append(toIndentedString(version)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -139,9 +139,9 @@ public class SubscriptionCancellationPolicy {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `allowMidBillCycleExpiration` to the URL query string
-    if (getAllowMidBillCycleExpiration() != null) {
-      joiner.add(String.format("%sallowMidBillCycleExpiration%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getAllowMidBillCycleExpiration()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `version` to the URL query string
+    if (getVersion() != null) {
+      joiner.add(String.format("%sversion%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getVersion()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     return joiner.toString();

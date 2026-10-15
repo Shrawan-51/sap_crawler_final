@@ -38,9 +38,23 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: Prompt if arguments not provided
+if "%SERVICE_NAME%"=="" (
+    set /p "SERVICE_NAME=Enter Service Name (e.g. usagerecords): "
+)
+if "%SERVICE_URL%"=="" (
+    set /p "SERVICE_URL=Enter SAP Endpoint URL: "
+)
+
+:: DB Configuration
+if "%DB_USER%"=="" set "DB_USER=postgres"
+if "%DB_PASS%"=="" set "DB_PASS=flash"
+if "%DB_NAME%"=="" set "DB_NAME=sap_bills"
+
 echo.
 echo [2/2] Running Auto Service Manager for "%SERVICE_NAME%"...
-call "%MVN_CMD%" exec:java -Dexec.mainClass="projectsap.sap.common.SapAutoServiceManager" -Dexec.args="\"%SERVICE_NAME%\" \"%SERVICE_URL%\""
+:: Pass via environment variables to prevent Windows CMD from splitting URLs on '&' and '%'
+call "%MVN_CMD%" exec:java -Dexec.mainClass="projectsap.sap.common.SapAutoServiceManager" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"
 
 echo.
 echo ==================================================================

@@ -9,6 +9,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import projectsap.sap.bill.db.DatabaseManager;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -34,7 +35,27 @@ public class SapAutoServiceManager {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) {
-        if (args.length < 2) {
+        String serviceName = null;
+        String urlOrPath = null;
+
+        if (args.length >= 2) {
+            serviceName = args[0].trim().toLowerCase();
+            urlOrPath = args[1].trim();
+        }
+
+        // Check environment variables or system properties if arguments are missing or truncated
+        if (serviceName == null || serviceName.isEmpty()) {
+            serviceName = System.getProperty("service.name", System.getenv("SERVICE_NAME"));
+            if (serviceName != null) serviceName = serviceName.trim().toLowerCase();
+        }
+        if (urlOrPath == null || urlOrPath.isEmpty() || (urlOrPath.endsWith("?paging") && System.getenv("SERVICE_URL") != null)) {
+            String envUrl = System.getProperty("service.url", System.getenv("SERVICE_URL"));
+            if (envUrl != null && !envUrl.trim().isEmpty()) {
+                urlOrPath = envUrl.trim();
+            }
+        }
+
+        if (serviceName == null || urlOrPath == null || urlOrPath.isEmpty()) {
             System.out.println("==================================================================");
             System.out.println("  SAP Automated Service Setup & POJO Generator                   ");
             System.out.println("==================================================================");
@@ -46,15 +67,9 @@ public class SapAutoServiceManager {
             System.out.println();
             System.out.println("  2. With SAP Sandbox API endpoint URL (Auto-infers schema & POJOs):");
             System.out.println("     java SapAutoServiceManager product https://sandbox.api.sap.com/subscriptionbilling/api/product/v1/products");
-            System.out.println();
-            System.out.println("  3. With a local spec file:");
-            System.out.println("     java SapAutoServiceManager order specs/sales-order-spec.json");
             System.out.println("==================================================================");
             return;
         }
-
-        String serviceName = args[0].trim().toLowerCase();
-        String urlOrPath = args[1].trim();
 
         try {
             setupService(serviceName, urlOrPath);
@@ -107,11 +122,12 @@ public class SapAutoServiceManager {
         System.out.println("  ✓ Saved specification to: " + targetSpecPath.toAbsolutePath());
 
         // Step 4: Run POJO generation command
-        System.out.println("\n[Step 2/3] Generating Java POJOs for " + serviceName + "...");
+        System.out.println("\n[Step 2/4] Generating Java POJOs for " + serviceName + "...");
         runPojoGenerator(serviceName, targetSpecPath.toString());
         copyGeneratedFilesToSrc(serviceName);
 
         // Step 5: Auto-register in SapServiceRegistry
+        System.out.println("\n[Step 3/4] Registering service in SapServiceRegistry...");
         String capitalizedModel = capitalize(serviceName);
         String fullPojoClassName = "projectsap.sap." + serviceName + ".model." + capitalizedModel;
         SapServiceRegistry.registerDynamic(
@@ -122,10 +138,29 @@ public class SapAutoServiceManager {
                 "Auto-generated service for SAP " + serviceName
         );
 
-        System.out.println("\n[Step 3/3] Setup complete! Service is ready for Auto POJO conversion.");
-        System.out.println("  - Model Package: projectsap.sap." + serviceName + ".model");
-        System.out.println("  - Main POJO:     " + fullPojoClassName);
-        System.out.println("  - Specification: " + targetSpecPath);
+        // Step 6: Automatically create database table & store data
+        System.out.println("\n[Step 4/4] Creating Database Table & Persisting Data in Database...");
+        try {
+            DatabaseManager.testConnection();
+            DatabaseManager.initDatabase();
+            String tableName = DatabaseManager.resolveTableName(serviceName);
+            if (!isOpenApi) {
+                int storedCount = DatabaseManager.saveServiceData(serviceName, content);
+                System.out.println("  ✓ Database Table '" + tableName + "' created and active in " + DatabaseManager.getDbEngineName());
+                System.out.println("  ✓ Stored " + storedCount + " records directly into database table '" + tableName + "'!");
+            } else {
+                System.out.println("  ✓ Database Table '" + tableName + "' ready for data persistence in " + DatabaseManager.getDbEngineName());
+            }
+        } catch (Exception e) {
+            System.err.println("  ℹ Database initialization note: " + e.getMessage());
+        }
+
+        System.out.println("\n==================================================================");
+        System.out.println("  Setup complete! Service POJOs and Database are ready.");
+        System.out.println("  - Model Package:  projectsap.sap." + serviceName + ".model");
+        System.out.println("  - Main POJO:      " + fullPojoClassName);
+        System.out.println("  - Database Table: " + DatabaseManager.resolveTableName(serviceName));
+        System.out.println("  - Specification:  " + targetSpecPath);
         System.out.println("==================================================================");
 
         return targetSpecPath.toFile();

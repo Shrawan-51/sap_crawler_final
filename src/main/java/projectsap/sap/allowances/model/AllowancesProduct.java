@@ -1,6 +1,6 @@
 /*
- * SAP Subscription Service API
- * Auto-generated OpenAPI 3.0 specification for SAP subscription
+ * SAP Allowances Service API
+ * Auto-generated OpenAPI 3.0 specification for SAP allowances
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package projectsap.sap.subscription.model;
+package projectsap.sap.allowances.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -29,24 +29,49 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem
+ * AllowancesProduct
  */
 @JsonPropertyOrder({
-  SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem.JSON_PROPERTY_CODE,
-  SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem.JSON_PROPERTY_VALUE
+  AllowancesProduct.JSON_PROPERTY_ID,
+  AllowancesProduct.JSON_PROPERTY_CODE
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-08T23:47:29.174054300+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
-public class SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem {
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-10T22:42:51.230684900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+public class AllowancesProduct {
+  public static final String JSON_PROPERTY_ID = "id";
+  private String id;
+
   public static final String JSON_PROPERTY_CODE = "code";
   private String code;
 
-  public static final String JSON_PROPERTY_VALUE = "value";
-  private String value;
-
-  public SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem() { 
+  public AllowancesProduct() { 
   }
 
-  public SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem code(String code) {
+  public AllowancesProduct id(String id) {
+    this.id = id;
+    return this;
+  }
+
+   /**
+   * Get id
+   * @return id
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getId() {
+    return id;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setId(String id) {
+    this.id = id;
+  }
+
+
+  public AllowancesProduct code(String code) {
     this.code = code;
     return this;
   }
@@ -71,33 +96,8 @@ public class SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem {
   }
 
 
-  public SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem value(String value) {
-    this.value = value;
-    return this;
-  }
-
-   /**
-   * Get value
-   * @return value
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_VALUE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getValue() {
-    return value;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_VALUE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setValue(String value) {
-    this.value = value;
-  }
-
-
   /**
-   * Return true if this SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem object is equal to o.
+   * Return true if this AllowancesProduct object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -107,22 +107,22 @@ public class SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem subscriptionSnapshotsItemItemsItemSubscriptionParametersItem = (SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem) o;
-    return Objects.equals(this.code, subscriptionSnapshotsItemItemsItemSubscriptionParametersItem.code) &&
-        Objects.equals(this.value, subscriptionSnapshotsItemItemsItemSubscriptionParametersItem.value);
+    AllowancesProduct allowancesProduct = (AllowancesProduct) o;
+    return Objects.equals(this.id, allowancesProduct.id) &&
+        Objects.equals(this.code, allowancesProduct.code);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(code, value);
+    return Objects.hash(id, code);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem {\n");
+    sb.append("class AllowancesProduct {\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    code: ").append(toIndentedString(code)).append("\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -170,14 +170,14 @@ public class SubscriptionSnapshotsItemItemsItemSubscriptionParametersItem {
 
     StringJoiner joiner = new StringJoiner("&");
 
+    // add `id` to the URL query string
+    if (getId() != null) {
+      joiner.add(String.format("%sid%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
     // add `code` to the URL query string
     if (getCode() != null) {
       joiner.add(String.format("%scode%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCode()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `value` to the URL query string
-    if (getValue() != null) {
-      joiner.add(String.format("%svalue%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getValue()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     return joiner.toString();

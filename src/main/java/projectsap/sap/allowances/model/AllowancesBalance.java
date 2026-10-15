@@ -1,6 +1,6 @@
 /*
- * SAP Subscription Service API
- * Auto-generated OpenAPI 3.0 specification for SAP subscription
+ * SAP Allowances Service API
+ * Auto-generated OpenAPI 3.0 specification for SAP allowances
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package projectsap.sap.subscription.model;
+package projectsap.sap.allowances.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,80 +24,81 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * SubscriptionSnapshotsItemItemsItemRatePlan
+ * AllowancesBalance
  */
 @JsonPropertyOrder({
-  SubscriptionSnapshotsItemItemsItemRatePlan.JSON_PROPERTY_ID,
-  SubscriptionSnapshotsItemItemsItemRatePlan.JSON_PROPERTY_SOURCE
+  AllowancesBalance.JSON_PROPERTY_INITIAL,
+  AllowancesBalance.JSON_PROPERTY_REMAINING
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-08T23:47:29.174054300+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
-public class SubscriptionSnapshotsItemItemsItemRatePlan {
-  public static final String JSON_PROPERTY_ID = "id";
-  private String id;
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-10T22:42:51.230684900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+public class AllowancesBalance {
+  public static final String JSON_PROPERTY_INITIAL = "initial";
+  private BigDecimal initial;
 
-  public static final String JSON_PROPERTY_SOURCE = "source";
-  private String source;
+  public static final String JSON_PROPERTY_REMAINING = "remaining";
+  private BigDecimal remaining;
 
-  public SubscriptionSnapshotsItemItemsItemRatePlan() { 
+  public AllowancesBalance() { 
   }
 
-  public SubscriptionSnapshotsItemItemsItemRatePlan id(String id) {
-    this.id = id;
+  public AllowancesBalance initial(BigDecimal initial) {
+    this.initial = initial;
     return this;
   }
 
    /**
-   * Get id
-   * @return id
+   * Get initial
+   * @return initial
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(JSON_PROPERTY_INITIAL)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getId() {
-    return id;
+  public BigDecimal getInitial() {
+    return initial;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(JSON_PROPERTY_INITIAL)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setId(String id) {
-    this.id = id;
+  public void setInitial(BigDecimal initial) {
+    this.initial = initial;
   }
 
 
-  public SubscriptionSnapshotsItemItemsItemRatePlan source(String source) {
-    this.source = source;
+  public AllowancesBalance remaining(BigDecimal remaining) {
+    this.remaining = remaining;
     return this;
   }
 
    /**
-   * Get source
-   * @return source
+   * Get remaining
+   * @return remaining
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_SOURCE)
+  @JsonProperty(JSON_PROPERTY_REMAINING)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getSource() {
-    return source;
+  public BigDecimal getRemaining() {
+    return remaining;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_SOURCE)
+  @JsonProperty(JSON_PROPERTY_REMAINING)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setSource(String source) {
-    this.source = source;
+  public void setRemaining(BigDecimal remaining) {
+    this.remaining = remaining;
   }
 
 
   /**
-   * Return true if this SubscriptionSnapshotsItemItemsItemRatePlan object is equal to o.
+   * Return true if this AllowancesBalance object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -107,22 +108,22 @@ public class SubscriptionSnapshotsItemItemsItemRatePlan {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionSnapshotsItemItemsItemRatePlan subscriptionSnapshotsItemItemsItemRatePlan = (SubscriptionSnapshotsItemItemsItemRatePlan) o;
-    return Objects.equals(this.id, subscriptionSnapshotsItemItemsItemRatePlan.id) &&
-        Objects.equals(this.source, subscriptionSnapshotsItemItemsItemRatePlan.source);
+    AllowancesBalance allowancesBalance = (AllowancesBalance) o;
+    return Objects.equals(this.initial, allowancesBalance.initial) &&
+        Objects.equals(this.remaining, allowancesBalance.remaining);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, source);
+    return Objects.hash(initial, remaining);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionSnapshotsItemItemsItemRatePlan {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
-    sb.append("    source: ").append(toIndentedString(source)).append("\n");
+    sb.append("class AllowancesBalance {\n");
+    sb.append("    initial: ").append(toIndentedString(initial)).append("\n");
+    sb.append("    remaining: ").append(toIndentedString(remaining)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -170,14 +171,14 @@ public class SubscriptionSnapshotsItemItemsItemRatePlan {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format("%sid%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `initial` to the URL query string
+    if (getInitial() != null) {
+      joiner.add(String.format("%sinitial%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getInitial()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `source` to the URL query string
-    if (getSource() != null) {
-      joiner.add(String.format("%ssource%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSource()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `remaining` to the URL query string
+    if (getRemaining() != null) {
+      joiner.add(String.format("%sremaining%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getRemaining()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     return joiner.toString();

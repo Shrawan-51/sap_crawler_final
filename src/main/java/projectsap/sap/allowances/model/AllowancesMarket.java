@@ -1,6 +1,6 @@
 /*
- * SAP Subscription Service API
- * Auto-generated OpenAPI 3.0 specification for SAP subscription
+ * SAP Allowances Service API
+ * Auto-generated OpenAPI 3.0 specification for SAP allowances
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package projectsap.sap.subscription.model;
+package projectsap.sap.allowances.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -29,15 +29,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * SubscriptionMarket
+ * AllowancesMarket
  */
 @JsonPropertyOrder({
-  SubscriptionMarket.JSON_PROPERTY_ID,
-  SubscriptionMarket.JSON_PROPERTY_TIME_ZONE,
-  SubscriptionMarket.JSON_PROPERTY_CURRENCY
+  AllowancesMarket.JSON_PROPERTY_ID,
+  AllowancesMarket.JSON_PROPERTY_TIME_ZONE,
+  AllowancesMarket.JSON_PROPERTY_CURRENCY
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-08T23:47:29.174054300+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
-public class SubscriptionMarket {
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-10T22:42:51.230684900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+public class AllowancesMarket {
   public static final String JSON_PROPERTY_ID = "id";
   private String id;
 
@@ -47,10 +47,10 @@ public class SubscriptionMarket {
   public static final String JSON_PROPERTY_CURRENCY = "currency";
   private String currency;
 
-  public SubscriptionMarket() { 
+  public AllowancesMarket() { 
   }
 
-  public SubscriptionMarket id(String id) {
+  public AllowancesMarket id(String id) {
     this.id = id;
     return this;
   }
@@ -75,7 +75,7 @@ public class SubscriptionMarket {
   }
 
 
-  public SubscriptionMarket timeZone(String timeZone) {
+  public AllowancesMarket timeZone(String timeZone) {
     this.timeZone = timeZone;
     return this;
   }
@@ -100,7 +100,7 @@ public class SubscriptionMarket {
   }
 
 
-  public SubscriptionMarket currency(String currency) {
+  public AllowancesMarket currency(String currency) {
     this.currency = currency;
     return this;
   }
@@ -126,7 +126,7 @@ public class SubscriptionMarket {
 
 
   /**
-   * Return true if this SubscriptionMarket object is equal to o.
+   * Return true if this AllowancesMarket object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -136,10 +136,10 @@ public class SubscriptionMarket {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionMarket subscriptionMarket = (SubscriptionMarket) o;
-    return Objects.equals(this.id, subscriptionMarket.id) &&
-        Objects.equals(this.timeZone, subscriptionMarket.timeZone) &&
-        Objects.equals(this.currency, subscriptionMarket.currency);
+    AllowancesMarket allowancesMarket = (AllowancesMarket) o;
+    return Objects.equals(this.id, allowancesMarket.id) &&
+        Objects.equals(this.timeZone, allowancesMarket.timeZone) &&
+        Objects.equals(this.currency, allowancesMarket.currency);
   }
 
   @Override
@@ -150,7 +150,7 @@ public class SubscriptionMarket {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionMarket {\n");
+    sb.append("class AllowancesMarket {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    timeZone: ").append(toIndentedString(timeZone)).append("\n");
     sb.append("    currency: ").append(toIndentedString(currency)).append("\n");
