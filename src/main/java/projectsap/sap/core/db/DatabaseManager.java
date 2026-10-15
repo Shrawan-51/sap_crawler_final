@@ -31,7 +31,7 @@ public class DatabaseManager {
     private static final String PG_USER = getSetting("db.user", "DB_USER", "postgres");
     private static final String PG_PASS = getSetting("db.pass", "DB_PASS", "");
 
-    private static final String PG_URL = "jdbc:postgresql://" + PG_HOST + ":" + PG_PORT + "/" + PG_DB;
+    private static final String PG_URL = buildPostgresUrl();
 
     // â”€â”€ H2 Fallback Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static final String H2_URL = "jdbc:h2:./data/sap_bills_db;MODE=PostgreSQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1";
@@ -68,12 +68,13 @@ public class DatabaseManager {
         try {
             ensurePostgresDatabaseExists();
             try (Connection conn = DriverManager.getConnection(PG_URL, PG_USER, PG_PASS)) {
-                if (conn.isValid(3)) {
+                if (conn.isValid(5)) {
                     activeUrl = PG_URL;
                     activeUser = PG_USER;
                     activePass = PG_PASS;
-                    dbEngineName = "PostgreSQL (localhost:5432/" + PG_DB + ")";
-                    LOGGER.info("Successfully connected to PostgreSQL database: {}", PG_DB);
+                    boolean isCloud = !PG_HOST.equalsIgnoreCase("localhost") && !PG_HOST.equalsIgnoreCase("127.0.0.1");
+                    dbEngineName = isCloud ? "Neon Cloud PostgreSQL (" + PG_HOST + "/" + PG_DB + ")" : "PostgreSQL (localhost:5432/" + PG_DB + ")";
+                    LOGGER.info("Successfully connected to PostgreSQL database: {}", dbEngineName);
                     return true;
                 }
             }
@@ -98,11 +99,33 @@ public class DatabaseManager {
         return false;
     }
 
+    private static String buildPostgresUrl() {
+        String explicitUrl = getSetting("db.url", "DB_URL", null);
+        if (explicitUrl != null && !explicitUrl.trim().isEmpty()) {
+            String u = explicitUrl.trim();
+            if (u.startsWith("postgresql://")) {
+                u = "jdbc:" + u;
+            }
+            return u;
+        }
+        String url = "jdbc:postgresql://" + PG_HOST + ":" + PG_PORT + "/" + PG_DB;
+        if (!"localhost".equalsIgnoreCase(PG_HOST) && !"127.0.0.1".equalsIgnoreCase(PG_HOST)) {
+            if (!url.contains("sslmode=")) {
+                url += (url.contains("?") ? "&" : "?") + "sslmode=require";
+            }
+        }
+        return url;
+    }
+
     /**
      * Auto-creates the target database in PostgreSQL if it doesn't exist.
      * Sanitizes database name to prevent SQL injection.
      */
     private static void ensurePostgresDatabaseExists() {
+        // Cloud-hosted databases (Neon, Supabase, RDS) are pre-provisioned and managed
+        if (!"localhost".equalsIgnoreCase(PG_HOST) && !"127.0.0.1".equalsIgnoreCase(PG_HOST)) {
+            return;
+        }
         String maintenanceUrl = "jdbc:postgresql://" + PG_HOST + ":" + PG_PORT + "/postgres";
         try (Connection conn = DriverManager.getConnection(maintenanceUrl, PG_USER, PG_PASS)) {
             String checkSql = "SELECT 1 FROM pg_database WHERE datname = ?";
