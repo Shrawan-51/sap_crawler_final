@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 
 :: 2. Choose Mode
 if "%~1"=="runner" (
-    echo Running Unified Real-Time API Test Runner (MainApiTestRunner)...
+    echo Running Unified Real-Time API Test Runner [MainApiTestRunner]...
     echo.
     call "%MVN_CMD%" exec:java "-Dexec.mainClass=projectsap.sap.MainApiTestRunner" "-Dexec.classpathScope=test"
 ) else (
