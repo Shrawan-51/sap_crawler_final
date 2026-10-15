@@ -11,8 +11,12 @@ if exist .env (
         if "%%a"=="DB_USER" if "%DB_USER%"=="" set "DB_USER=%%b"
         if "%%a"=="DB_PASS" if "%DB_PASS%"=="" set "DB_PASS=%%b"
         if "%%a"=="DB_NAME" if "%DB_NAME%"=="" set "DB_NAME=%%b"
+        if "%%a"=="DB_HOST" if "%DB_HOST%"=="" set "DB_HOST=%%b"
+        if "%%a"=="DB_PORT" if "%DB_PORT%"=="" set "DB_PORT=%%b"
     )
 )
+if "%DB_HOST%"=="" set "DB_HOST=localhost"
+if "%DB_PORT%"=="" set "DB_PORT=5432"
 if "%DB_USER%"=="" set "DB_USER=postgres"
 if "%DB_PASS%"=="" set "DB_PASS="
 if "%DB_NAME%"=="" set "DB_NAME=sap_bills"
@@ -30,7 +34,7 @@ if %errorlevel% neq 0 (
     )
 )
 
-call "%MVN_CMD%" compile exec:java -Dexec.mainClass="projectsap.sap.core.db.DatabaseViewer" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"
+call "%MVN_CMD%" compile exec:java -Dexec.mainClass="projectsap.sap.core.db.DatabaseViewer" "-Ddb.host=%DB_HOST%" "-Ddb.port=%DB_PORT%" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"
 
 echo.
 pause
