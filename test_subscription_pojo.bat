@@ -18,9 +18,16 @@ if %errorlevel% neq 0 (
     )
 )
 
-:: DB Configuration
+:: DB Configuration (loaded from .env if present)
+if exist .env (
+    for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
+        if "%%a"=="DB_USER" if "%DB_USER%"=="" set "DB_USER=%%b"
+        if "%%a"=="DB_PASS" if "%DB_PASS%"=="" set "DB_PASS=%%b"
+        if "%%a"=="DB_NAME" if "%DB_NAME%"=="" set "DB_NAME=%%b"
+    )
+)
 if "%DB_USER%"=="" set "DB_USER=postgres"
-if "%DB_PASS%"=="" set "DB_PASS=flash"
+if "%DB_PASS%"=="" set "DB_PASS="
 if "%DB_NAME%"=="" set "DB_NAME=sap_bills"
 
 call "%MVN_CMD%" test-compile exec:java -Dexec.mainClass="projectsap.sap.subscription.TestSubscriptionAutoPojo" -Dexec.classpathScope="test" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"

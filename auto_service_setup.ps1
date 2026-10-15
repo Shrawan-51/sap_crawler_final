@@ -27,9 +27,17 @@ if (-not (Get-Command mvn -ErrorAction SilentlyContinue)) {
     }
 }
 
-# 2. Database Defaults
+# 2. Database Defaults (loaded from .env if present)
+if (Test-Path ".env") {
+    Get-Content ".env" | ForEach-Object {
+        $parts = $_.Split('=', 2)
+        if ($parts.Length -eq 2) {
+            [System.Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim())
+        }
+    }
+}
 $dbUser = if ($env:DB_USER) { $env:DB_USER } else { "postgres" }
-$dbPass = if ($env:DB_PASS) { $env:DB_PASS } else { "flash" }
+$dbPass = if ($env:DB_PASS) { $env:DB_PASS } else { "" }
 $dbName = if ($env:DB_NAME) { $env:DB_NAME } else { "sap_bills" }
 
 # 3. Compile Setup Manager

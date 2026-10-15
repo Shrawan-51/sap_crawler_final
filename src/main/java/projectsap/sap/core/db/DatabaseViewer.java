@@ -1,4 +1,4 @@
-package projectsap.sap.bill.db;
+package projectsap.sap.core.db;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -56,7 +56,7 @@ public class DatabaseViewer {
                      ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tbl)) {
                     if (rs.next()) {
                         long count = rs.getLong(1);
-                        System.out.printf("  • %-25s : %d records%n", tbl, count);
+                        System.out.printf("  â€¢ %-25s : %d records%n", tbl, count);
                     }
                 } catch (Exception ignored) {}
             }
@@ -157,3 +157,4 @@ public class DatabaseViewer {
         return str.substring(0, maxLen - 3) + "...";
     }
 }
+

@@ -1,9 +1,9 @@
-package projectsap.sap.bill.server;
+package projectsap.sap.core.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import projectsap.sap.bill.client.SapApiClient;
-import projectsap.sap.bill.db.DatabaseManager;
+import projectsap.sap.core.client.SapApiClient;
+import projectsap.sap.core.db.DatabaseManager;
 import projectsap.sap.common.GenericSapParser;
 import projectsap.sap.common.SapServiceRegistry;
 

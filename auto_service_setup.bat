@@ -46,9 +46,16 @@ if "%SERVICE_URL%"=="" (
     set /p "SERVICE_URL=Enter SAP Endpoint URL: "
 )
 
-:: DB Configuration
+:: DB Configuration (loaded from .env if present)
+if exist .env (
+    for /f "usebackq tokens=1,* delims==" %%a in (".env") do (
+        if "%%a"=="DB_USER" if "%DB_USER%"=="" set "DB_USER=%%b"
+        if "%%a"=="DB_PASS" if "%DB_PASS%"=="" set "DB_PASS=%%b"
+        if "%%a"=="DB_NAME" if "%DB_NAME%"=="" set "DB_NAME=%%b"
+    )
+)
 if "%DB_USER%"=="" set "DB_USER=postgres"
-if "%DB_PASS%"=="" set "DB_PASS=flash"
+if "%DB_PASS%"=="" set "DB_PASS="
 if "%DB_NAME%"=="" set "DB_NAME=sap_bills"
 
 echo.

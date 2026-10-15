@@ -1,4 +1,4 @@
-package projectsap.sap.bill.client;
+package projectsap.sap.core.client;
 
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -71,3 +71,4 @@ public class SapApiClient {
         }
     }
 }
+

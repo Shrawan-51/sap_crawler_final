@@ -9,7 +9,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import projectsap.sap.bill.db.DatabaseManager;
+import projectsap.sap.core.db.DatabaseManager;
 
 import java.io.File;
 import java.io.FileWriter;

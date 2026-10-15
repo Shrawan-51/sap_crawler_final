@@ -1,6 +1,6 @@
 package projectsap.sap.bill;
 
-import projectsap.sap.bill.client.SapApiClient;
+import projectsap.sap.core.client.SapApiClient;
 
 public class TestSapApi {
     public static void main(String[] args) {

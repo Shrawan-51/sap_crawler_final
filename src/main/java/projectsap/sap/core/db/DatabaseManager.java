@@ -1,4 +1,4 @@
-package projectsap.sap.bill.db;
+package projectsap.sap.core.db;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,16 +20,16 @@ import java.util.*;
  */
 public class DatabaseManager {
 
-    // ── PostgreSQL Configuration ─────────────────────────────
-    private static final String PG_HOST = System.getProperty("db.host", System.getenv().getOrDefault("DB_HOST", "localhost"));
-    private static final int PG_PORT = Integer.parseInt(System.getProperty("db.port", System.getenv().getOrDefault("DB_PORT", "5432")));
-    private static final String PG_DB = System.getProperty("db.name", System.getenv().getOrDefault("DB_NAME", "sap_bills"));
-    private static final String PG_USER = System.getProperty("db.user", System.getenv().getOrDefault("DB_USER", "postgres"));
-    private static final String PG_PASS = System.getProperty("db.pass", System.getenv().getOrDefault("DB_PASS", "flash"));
+    // â”€â”€ PostgreSQL Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    private static final String PG_HOST = getSetting("db.host", "DB_HOST", "localhost");
+    private static final int PG_PORT = Integer.parseInt(getSetting("db.port", "DB_PORT", "5432"));
+    private static final String PG_DB = getSetting("db.name", "DB_NAME", "sap_bills");
+    private static final String PG_USER = getSetting("db.user", "DB_USER", "postgres");
+    private static final String PG_PASS = getSetting("db.pass", "DB_PASS", "");
 
     private static final String PG_URL = "jdbc:postgresql://" + PG_HOST + ":" + PG_PORT + "/" + PG_DB;
 
-    // ── H2 Fallback Configuration ─────────────────────────────
+    // â”€â”€ H2 Fallback Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static final String H2_URL = "jdbc:h2:./data/sap_bills_db;MODE=PostgreSQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1";
     private static final String H2_USER = "sa";
     private static final String H2_PASS = "";
@@ -1014,4 +1014,24 @@ public class DatabaseManager {
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
     }
+
+    private static String getSetting(String sysProp, String envVar, String defaultVal) {
+        String val = System.getProperty(sysProp);
+        if (val != null && !val.isEmpty()) return val;
+        val = System.getenv(envVar);
+        if (val != null && !val.isEmpty()) return val;
+        File envFile = new File(".env");
+        if (envFile.exists()) {
+            try (Scanner scanner = new Scanner(envFile)) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine().trim();
+                    if (line.startsWith(envVar + "=")) {
+                        return line.substring(envVar.length() + 1).trim();
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return defaultVal;
+    }
 }
+

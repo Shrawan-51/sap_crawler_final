@@ -116,13 +116,13 @@ When you run `auto_service_setup.bat <serviceName> <serviceUrl>`, the 4 stages e
 
 | Component | File Path | Key Responsibilities |
 |---|---|---|
-| **`SapApiClient`** | `src/main/java/projectsap/sap/bill/client/SapApiClient.java` | Universal HTTP client using Apache HttpClient 5. Handles timeouts, TLS handshakes, and APIKey authentication headers. |
+| **`SapApiClient`** | `src/main/java/projectsap/sap/core/client/SapApiClient.java` | Universal HTTP client using Apache HttpClient 5. Handles timeouts, TLS handshakes, and APIKey authentication headers. |
 | **`GenericSapParser`** | `src/main/java/projectsap/sap/common/GenericSapParser.java` | Universal deserializer. Unwraps SAP wrapper keys (`bills`, `subscriptions`, `value`, `items`, `data`, `results`, `d.results`) and converts JSON into strongly-typed POJO lists. |
 | **`SapServiceRegistry`** | `src/main/java/projectsap/sap/common/SapServiceRegistry.java` | Central service dictionary. Maintains metadata, default endpoints, and POJO class references dynamically. |
 | **`SapAutoServiceManager`** | `src/main/java/projectsap/sap/common/SapAutoServiceManager.java` | 1-Click orchestrator for schema inference, Maven code generation, and immediate database table setup. |
-| **`DatabaseManager`** | `src/main/java/projectsap/sap/bill/db/DatabaseManager.java` | Dual-engine database controller. Creates `sap_bills` database, synthesizes tables dynamically, binds parameters, and logs sync operations. |
-| **`DatabaseViewer`** | `src/main/java/projectsap/sap/bill/db/DatabaseViewer.java` | Terminal database inspection tool. Discovers user tables and displays formatted record previews. |
-| **`BillServer`** | `src/main/java/projectsap/sap/bill/server/BillServer.java` | Multi-threaded HTTP server hosting REST APIs and serving frontend static assets on port 8080. |
+| **`DatabaseManager`** | `src/main/java/projectsap/sap/core/db/DatabaseManager.java` | Dual-engine database controller. Creates `sap_bills` database, synthesizes tables dynamically, binds parameters, and logs sync operations. |
+| **`DatabaseViewer`** | `src/main/java/projectsap/sap/core/db/DatabaseViewer.java` | Terminal database inspection tool. Discovers user tables and displays formatted record previews. |
+| **`BillServer`** | `src/main/java/projectsap/sap/core/server/BillServer.java` | Multi-threaded HTTP server hosting REST APIs and serving frontend static assets on port 8080. |
 | **Frontend UI** | `frontend/index.html`, `app.js`, `styles.css` | Real-time analytics dashboard with Chart.js charts, status indicators, and multi-service controls. |
 
 ---

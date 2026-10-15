@@ -18,7 +18,7 @@
         <jackson.version>2.17.0</jackson.version>
         <h2.version>2.2.224</h2.version>
         <postgresql.version>42.7.3</postgresql.version>
-        <exec.mainClass>projectsap.sap.bill.server.BillServer</exec.mainClass>
+        <exec.mainClass>projectsap.sap.core.server.BillServer</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -107,7 +107,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>projectsap.sap.bill.server.BillServer</mainClass>
+                            <mainClass>projectsap.sap.core.server.BillServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

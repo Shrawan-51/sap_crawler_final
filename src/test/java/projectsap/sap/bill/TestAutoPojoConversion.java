@@ -1,7 +1,7 @@
 package projectsap.sap.bill;
 
-import projectsap.sap.bill.client.SapApiClient;
-import projectsap.sap.bill.db.DatabaseManager;
+import projectsap.sap.core.client.SapApiClient;
+import projectsap.sap.core.db.DatabaseManager;
 import projectsap.sap.bill.model.Bill;
 import projectsap.sap.bill.model.BillItem;
 import projectsap.sap.common.GenericSapParser;

@@ -7,6 +7,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import projectsap.sap.common.GenericSapParser;
 import projectsap.sap.common.SapServiceRegistry;
+import projectsap.sap.core.db.DatabaseManager;
 import projectsap.sap.subscription.model.Subscription;
 
 import java.util.List;
@@ -69,12 +70,12 @@ public class TestSubscriptionAutoPojo {
 
             // 4. Auto Database Table Creation & Persistence Verification
             System.out.println("\n[4/4] Auto-Creating DB Table & Persisting Subscriptions to Database...");
-            projectsap.sap.bill.db.DatabaseManager.testConnection();
-            projectsap.sap.bill.db.DatabaseManager.initDatabase();
+            DatabaseManager.testConnection();
+            DatabaseManager.initDatabase();
 
-            int savedCount = projectsap.sap.bill.db.DatabaseManager.saveServiceData("subscriptions", rawJson);
-            String dbEngine = projectsap.sap.bill.db.DatabaseManager.getDbEngineName();
-            long totalInDb = projectsap.sap.bill.db.DatabaseManager.getServiceCount("subscriptions");
+            int savedCount = DatabaseManager.saveServiceData("subscriptions", rawJson);
+            String dbEngine = DatabaseManager.getDbEngineName();
+            long totalInDb = DatabaseManager.getServiceCount("subscriptions");
 
             System.out.println("  ✓ Database Engine:       " + dbEngine);
             System.out.println("  ✓ Records Stored/Upsert: " + savedCount);
