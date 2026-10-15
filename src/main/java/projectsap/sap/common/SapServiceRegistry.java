@@ -1,5 +1,7 @@
 package projectsap.sap.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import projectsap.sap.bill.model.Bill;
 
 import java.util.Collections;
@@ -12,6 +14,8 @@ import java.util.Set;
  * Enables the system to support any arbitrary SAP service dynamically without hardcoded branching.
  */
 public class SapServiceRegistry {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SapServiceRegistry.class);
 
     public static class ServiceDescriptor<T> {
         private final String serviceId;
@@ -86,10 +90,10 @@ public class SapServiceRegistry {
         try {
             Class<?> clazz = Class.forName(pojoClassName);
             register(new ServiceDescriptor(serviceId, displayName, defaultEndpoint, clazz, description));
-            System.out.println("[Registry] Dynamically registered service '" + serviceId + "' with POJO " + pojoClassName);
+            LOGGER.info("Dynamically registered service '{}' with POJO {}", serviceId, pojoClassName);
             return true;
         } catch (ClassNotFoundException e) {
-            System.err.println("[Registry] Could not dynamically load POJO class: " + pojoClassName);
+            LOGGER.warn("Could not dynamically load POJO class for service '{}': {}", serviceId, pojoClassName);
             return false;
         }
     }

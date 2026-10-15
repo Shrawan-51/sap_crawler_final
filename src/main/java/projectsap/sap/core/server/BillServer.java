@@ -2,6 +2,8 @@ package projectsap.sap.core.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import projectsap.sap.core.client.SapApiClient;
 import projectsap.sap.core.db.DatabaseManager;
 import projectsap.sap.common.GenericSapParser;
@@ -22,6 +24,8 @@ import java.util.Map;
  * Embeds Sun HttpServer with dynamic port fallback (8080 -> 8085 -> 8081...)
  */
 public class BillServer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BillServer.class);
 
     private static final int[] PREFERRED_PORTS = {8080, 8085, 8081, 8082, 8888};
     private static final String FRONTEND_DIR = resolveFrontendDir();
@@ -89,7 +93,7 @@ public class BillServer {
                 sendJson(exchange, 200, json);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error handling /api/bills request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
         });
@@ -103,7 +107,7 @@ public class BillServer {
                 String json = DatabaseManager.getStats();
                 sendJson(exchange, 200, json);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error handling /api/stats request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
         });
@@ -147,7 +151,7 @@ public class BillServer {
                 sendJson(exchange, 200,
                     "{\"success\":true,\"service\":\"" + escapeJson(serviceName) + "\",\"table\":\"" + escapeJson(tableName) + "\",\"message\":\"Successfully synced " + count + " records via Auto POJO & Dynamic Database Persistence\",\"count\":" + count + "}");
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error syncing SAP service: {}", e.getMessage(), e);
                 DatabaseManager.logFetchError(e.getMessage());
                 sendJson(exchange, 500, "{\"success\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
@@ -173,7 +177,7 @@ public class BillServer {
                 String json = DatabaseManager.getServiceData(serviceName);
                 sendJson(exchange, 200, json);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error handling /api/data request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
         });
@@ -187,7 +191,7 @@ public class BillServer {
                 String json = DatabaseManager.getFetchLog();
                 sendJson(exchange, 200, json);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error handling /api/fetch-log request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
         });
@@ -212,7 +216,7 @@ public class BillServer {
                 }
                 sendJson(exchange, 200, GenericSapParser.toJson(serviceList));
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("Error handling /api/services request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
             }
         });
@@ -257,7 +261,21 @@ public class BillServer {
     }
 
     private static void serveFile(HttpExchange exchange, String relativePath) throws IOException {
-        File file = new File(FRONTEND_DIR, relativePath);
+        File baseDir = new File(FRONTEND_DIR).getCanonicalFile();
+        File file = new File(baseDir, relativePath).getCanonicalFile();
+
+        // Path Traversal Security Verification (OWASP / CWE-22)
+        if (!file.getPath().startsWith(baseDir.getPath())) {
+            LOGGER.warn("Blocked path traversal attempt outside frontend directory: {}", relativePath);
+            byte[] bytes = "403 Forbidden".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+            exchange.sendResponseHeaders(403, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+            return;
+        }
+
         if (file.exists() && file.isFile()) {
             String contentType = getContentType(relativePath);
             exchange.getResponseHeaders().add("Content-Type", contentType);
@@ -287,13 +305,13 @@ public class BillServer {
         }
     }
 
-    private static void addCorsHeaders(HttpExchange exchange) {
+    static void addCorsHeaders(HttpExchange exchange) {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD");
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     }
 
-    private static boolean handlePreflight(HttpExchange exchange) throws IOException {
+    static boolean handlePreflight(HttpExchange exchange) throws IOException {
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(204, -1);
             return true;
@@ -301,7 +319,7 @@ public class BillServer {
         return false;
     }
 
-    private static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
+    static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
         exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
         byte[] response = json.getBytes(StandardCharsets.UTF_8);
         if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -315,7 +333,7 @@ public class BillServer {
         }
     }
 
-    private static Map<String, String> parseQuery(String query) {
+    static Map<String, String> parseQuery(String query) {
         Map<String, String> params = new HashMap<>();
         if (query == null || query.isEmpty()) return params;
         for (String pair : query.split("&")) {
@@ -332,7 +350,7 @@ public class BillServer {
         return params;
     }
 
-    private static String getContentType(String path) {
+    static String getContentType(String path) {
         if (path.endsWith(".html")) return "text/html; charset=UTF-8";
         if (path.endsWith(".css"))  return "text/css; charset=UTF-8";
         if (path.endsWith(".js"))   return "application/javascript; charset=UTF-8";

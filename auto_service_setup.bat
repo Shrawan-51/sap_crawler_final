@@ -27,8 +27,8 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo Service: %SERVICE_NAME%
-echo Endpoint: %SERVICE_URL%
+echo Service:  !SERVICE_NAME!
+echo Endpoint: "!SERVICE_URL!"
 echo.
 echo [1/2] Compiling Setup Manager...
 call "%MVN_CMD%" compile
@@ -59,12 +59,12 @@ if "%DB_PASS%"=="" set "DB_PASS="
 if "%DB_NAME%"=="" set "DB_NAME=sap_bills"
 
 echo.
-echo [2/2] Running Auto Service Manager for "%SERVICE_NAME%"...
+echo [2/2] Running Auto Service Manager for "!SERVICE_NAME!"...
 :: Pass via environment variables to prevent Windows CMD from splitting URLs on '&' and '%'
 call "%MVN_CMD%" exec:java -Dexec.mainClass="projectsap.sap.common.SapAutoServiceManager" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"
 
 echo.
 echo ==================================================================
-echo   Done! Check src/main/java/projectsap/sap/%SERVICE_NAME%/model
+echo   Setup Complete. Check src/main/java/projectsap/sap/%SERVICE_NAME%/model
 echo ==================================================================
 pause

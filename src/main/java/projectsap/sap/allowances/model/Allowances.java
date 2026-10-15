@@ -27,11 +27,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import projectsap.sap.allowances.model.AllowancesAssignmentsItem;
-import projectsap.sap.allowances.model.AllowancesBalance;
-import projectsap.sap.allowances.model.AllowancesMarket;
-import projectsap.sap.allowances.model.AllowancesMetaData;
-import projectsap.sap.allowances.model.AllowancesProduct;
+import projectsap.sap.allowances.model.AllowancesMarketSpecificAttributesItem;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -39,139 +35,95 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Allowances
  */
 @JsonPropertyOrder({
-  Allowances.JSON_PROPERTY_META_DATA,
-  Allowances.JSON_PROPERTY_ALLOWANCE_ID,
+  Allowances.JSON_PROPERTY_ID,
+  Allowances.JSON_PROPERTY_NUMBER,
   Allowances.JSON_PROPERTY_DESCRIPTION,
-  Allowances.JSON_PROPERTY_DOCUMENT_NUMBER,
-  Allowances.JSON_PROPERTY_ALLOWANCE_DOCUMENT_ID,
-  Allowances.JSON_PROPERTY_MAIN_SUBSCRIPTION_ID,
-  Allowances.JSON_PROPERTY_MAIN_SUBSCRIPTION_DOCUMENT_ID,
-  Allowances.JSON_PROPERTY_ALLOWANCE_TEMPLATE_ID,
-  Allowances.JSON_PROPERTY_CUSTOMER_ID,
-  Allowances.JSON_PROPERTY_MARKET,
-  Allowances.JSON_PROPERTY_CURRENCY,
-  Allowances.JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE,
-  Allowances.JSON_PROPERTY_VALID_FROM,
-  Allowances.JSON_PROPERTY_VALID_UNTIL,
-  Allowances.JSON_PROPERTY_STATUS,
-  Allowances.JSON_PROPERTY_BALANCE,
-  Allowances.JSON_PROPERTY_UNIT_CODE,
-  Allowances.JSON_PROPERTY_PRODUCT,
-  Allowances.JSON_PROPERTY_ASSIGNMENTS,
-  Allowances.JSON_PROPERTY_NOTIFICATION_SETTINGS
+  Allowances.JSON_PROPERTY_PUBLISHED,
+  Allowances.JSON_PROPERTY_TECHNICAL_RESOURCE_TYPES,
+  Allowances.JSON_PROPERTY_MARKET_SPECIFIC_ATTRIBUTES,
+  Allowances.JSON_PROPERTY_NOTIFICATION_SETTINGS,
+  Allowances.JSON_PROPERTY_CREATED_AT,
+  Allowances.JSON_PROPERTY_CHANGED_AT
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-10T22:42:51.230684900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-15T16:29:06.806138900+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
 public class Allowances {
-  public static final String JSON_PROPERTY_META_DATA = "metaData";
-  private AllowancesMetaData metaData;
+  public static final String JSON_PROPERTY_ID = "id";
+  private String id;
 
-  public static final String JSON_PROPERTY_ALLOWANCE_ID = "allowanceId";
-  private String allowanceId;
+  public static final String JSON_PROPERTY_NUMBER = "number";
+  private Integer number;
 
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private String description;
 
-  public static final String JSON_PROPERTY_DOCUMENT_NUMBER = "documentNumber";
-  private Integer documentNumber;
+  public static final String JSON_PROPERTY_PUBLISHED = "published";
+  private Boolean published;
 
-  public static final String JSON_PROPERTY_ALLOWANCE_DOCUMENT_ID = "allowanceDocumentId";
-  private String allowanceDocumentId;
+  public static final String JSON_PROPERTY_TECHNICAL_RESOURCE_TYPES = "technicalResourceTypes";
+  private List<String> technicalResourceTypes = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_MAIN_SUBSCRIPTION_ID = "mainSubscriptionId";
-  private String mainSubscriptionId;
-
-  public static final String JSON_PROPERTY_MAIN_SUBSCRIPTION_DOCUMENT_ID = "mainSubscriptionDocumentId";
-  private String mainSubscriptionDocumentId;
-
-  public static final String JSON_PROPERTY_ALLOWANCE_TEMPLATE_ID = "allowanceTemplateId";
-  private String allowanceTemplateId;
-
-  public static final String JSON_PROPERTY_CUSTOMER_ID = "customerId";
-  private String customerId;
-
-  public static final String JSON_PROPERTY_MARKET = "market";
-  private AllowancesMarket market;
-
-  public static final String JSON_PROPERTY_CURRENCY = "currency";
-  private String currency;
-
-  public static final String JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE = "subscriptionTimeZone";
-  private String subscriptionTimeZone;
-
-  public static final String JSON_PROPERTY_VALID_FROM = "validFrom";
-  private String validFrom;
-
-  public static final String JSON_PROPERTY_VALID_UNTIL = "validUntil";
-  private String validUntil;
-
-  public static final String JSON_PROPERTY_STATUS = "status";
-  private String status;
-
-  public static final String JSON_PROPERTY_BALANCE = "balance";
-  private AllowancesBalance balance;
-
-  public static final String JSON_PROPERTY_UNIT_CODE = "unitCode";
-  private String unitCode;
-
-  public static final String JSON_PROPERTY_PRODUCT = "product";
-  private AllowancesProduct product;
-
-  public static final String JSON_PROPERTY_ASSIGNMENTS = "assignments";
-  private List<AllowancesAssignmentsItem> assignments = new ArrayList<>();
+  public static final String JSON_PROPERTY_MARKET_SPECIFIC_ATTRIBUTES = "marketSpecificAttributes";
+  private List<AllowancesMarketSpecificAttributesItem> marketSpecificAttributes = new ArrayList<>();
 
   public static final String JSON_PROPERTY_NOTIFICATION_SETTINGS = "notificationSettings";
   private List<Object> notificationSettings = new ArrayList<>();
 
+  public static final String JSON_PROPERTY_CREATED_AT = "createdAt";
+  private String createdAt;
+
+  public static final String JSON_PROPERTY_CHANGED_AT = "changedAt";
+  private String changedAt;
+
   public Allowances() { 
   }
 
-  public Allowances metaData(AllowancesMetaData metaData) {
-    this.metaData = metaData;
+  public Allowances id(String id) {
+    this.id = id;
     return this;
   }
 
    /**
-   * Get metaData
-   * @return metaData
+   * Get id
+   * @return id
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_META_DATA)
+  @JsonProperty(JSON_PROPERTY_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public AllowancesMetaData getMetaData() {
-    return metaData;
+  public String getId() {
+    return id;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_META_DATA)
+  @JsonProperty(JSON_PROPERTY_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMetaData(AllowancesMetaData metaData) {
-    this.metaData = metaData;
+  public void setId(String id) {
+    this.id = id;
   }
 
 
-  public Allowances allowanceId(String allowanceId) {
-    this.allowanceId = allowanceId;
+  public Allowances number(Integer number) {
+    this.number = number;
     return this;
   }
 
    /**
-   * Get allowanceId
-   * @return allowanceId
+   * Get number
+   * @return number
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_ID)
+  @JsonProperty(JSON_PROPERTY_NUMBER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getAllowanceId() {
-    return allowanceId;
+  public Integer getNumber() {
+    return number;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_ID)
+  @JsonProperty(JSON_PROPERTY_NUMBER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAllowanceId(String allowanceId) {
-    this.allowanceId = allowanceId;
+  public void setNumber(Integer number) {
+    this.number = number;
   }
 
 
@@ -200,411 +152,94 @@ public class Allowances {
   }
 
 
-  public Allowances documentNumber(Integer documentNumber) {
-    this.documentNumber = documentNumber;
+  public Allowances published(Boolean published) {
+    this.published = published;
     return this;
   }
 
    /**
-   * Get documentNumber
-   * @return documentNumber
+   * Get published
+   * @return published
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_DOCUMENT_NUMBER)
+  @JsonProperty(JSON_PROPERTY_PUBLISHED)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Integer getDocumentNumber() {
-    return documentNumber;
+  public Boolean getPublished() {
+    return published;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_DOCUMENT_NUMBER)
+  @JsonProperty(JSON_PROPERTY_PUBLISHED)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDocumentNumber(Integer documentNumber) {
-    this.documentNumber = documentNumber;
+  public void setPublished(Boolean published) {
+    this.published = published;
   }
 
 
-  public Allowances allowanceDocumentId(String allowanceDocumentId) {
-    this.allowanceDocumentId = allowanceDocumentId;
+  public Allowances technicalResourceTypes(List<String> technicalResourceTypes) {
+    this.technicalResourceTypes = technicalResourceTypes;
     return this;
   }
 
-   /**
-   * Get allowanceDocumentId
-   * @return allowanceDocumentId
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_DOCUMENT_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getAllowanceDocumentId() {
-    return allowanceDocumentId;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_DOCUMENT_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAllowanceDocumentId(String allowanceDocumentId) {
-    this.allowanceDocumentId = allowanceDocumentId;
-  }
-
-
-  public Allowances mainSubscriptionId(String mainSubscriptionId) {
-    this.mainSubscriptionId = mainSubscriptionId;
-    return this;
-  }
-
-   /**
-   * Get mainSubscriptionId
-   * @return mainSubscriptionId
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_MAIN_SUBSCRIPTION_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getMainSubscriptionId() {
-    return mainSubscriptionId;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_MAIN_SUBSCRIPTION_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMainSubscriptionId(String mainSubscriptionId) {
-    this.mainSubscriptionId = mainSubscriptionId;
-  }
-
-
-  public Allowances mainSubscriptionDocumentId(String mainSubscriptionDocumentId) {
-    this.mainSubscriptionDocumentId = mainSubscriptionDocumentId;
-    return this;
-  }
-
-   /**
-   * Get mainSubscriptionDocumentId
-   * @return mainSubscriptionDocumentId
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_MAIN_SUBSCRIPTION_DOCUMENT_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getMainSubscriptionDocumentId() {
-    return mainSubscriptionDocumentId;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_MAIN_SUBSCRIPTION_DOCUMENT_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMainSubscriptionDocumentId(String mainSubscriptionDocumentId) {
-    this.mainSubscriptionDocumentId = mainSubscriptionDocumentId;
-  }
-
-
-  public Allowances allowanceTemplateId(String allowanceTemplateId) {
-    this.allowanceTemplateId = allowanceTemplateId;
-    return this;
-  }
-
-   /**
-   * Get allowanceTemplateId
-   * @return allowanceTemplateId
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_TEMPLATE_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getAllowanceTemplateId() {
-    return allowanceTemplateId;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_ALLOWANCE_TEMPLATE_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAllowanceTemplateId(String allowanceTemplateId) {
-    this.allowanceTemplateId = allowanceTemplateId;
-  }
-
-
-  public Allowances customerId(String customerId) {
-    this.customerId = customerId;
-    return this;
-  }
-
-   /**
-   * Get customerId
-   * @return customerId
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_CUSTOMER_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getCustomerId() {
-    return customerId;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_CUSTOMER_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setCustomerId(String customerId) {
-    this.customerId = customerId;
-  }
-
-
-  public Allowances market(AllowancesMarket market) {
-    this.market = market;
-    return this;
-  }
-
-   /**
-   * Get market
-   * @return market
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_MARKET)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public AllowancesMarket getMarket() {
-    return market;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_MARKET)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMarket(AllowancesMarket market) {
-    this.market = market;
-  }
-
-
-  public Allowances currency(String currency) {
-    this.currency = currency;
-    return this;
-  }
-
-   /**
-   * Get currency
-   * @return currency
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_CURRENCY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getCurrency() {
-    return currency;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_CURRENCY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setCurrency(String currency) {
-    this.currency = currency;
-  }
-
-
-  public Allowances subscriptionTimeZone(String subscriptionTimeZone) {
-    this.subscriptionTimeZone = subscriptionTimeZone;
-    return this;
-  }
-
-   /**
-   * Get subscriptionTimeZone
-   * @return subscriptionTimeZone
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getSubscriptionTimeZone() {
-    return subscriptionTimeZone;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setSubscriptionTimeZone(String subscriptionTimeZone) {
-    this.subscriptionTimeZone = subscriptionTimeZone;
-  }
-
-
-  public Allowances validFrom(String validFrom) {
-    this.validFrom = validFrom;
-    return this;
-  }
-
-   /**
-   * Get validFrom
-   * @return validFrom
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_VALID_FROM)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getValidFrom() {
-    return validFrom;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_VALID_FROM)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setValidFrom(String validFrom) {
-    this.validFrom = validFrom;
-  }
-
-
-  public Allowances validUntil(String validUntil) {
-    this.validUntil = validUntil;
-    return this;
-  }
-
-   /**
-   * Get validUntil
-   * @return validUntil
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_VALID_UNTIL)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getValidUntil() {
-    return validUntil;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_VALID_UNTIL)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setValidUntil(String validUntil) {
-    this.validUntil = validUntil;
-  }
-
-
-  public Allowances status(String status) {
-    this.status = status;
-    return this;
-  }
-
-   /**
-   * Get status
-   * @return status
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_STATUS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getStatus() {
-    return status;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_STATUS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-
-  public Allowances balance(AllowancesBalance balance) {
-    this.balance = balance;
-    return this;
-  }
-
-   /**
-   * Get balance
-   * @return balance
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_BALANCE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public AllowancesBalance getBalance() {
-    return balance;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_BALANCE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setBalance(AllowancesBalance balance) {
-    this.balance = balance;
-  }
-
-
-  public Allowances unitCode(String unitCode) {
-    this.unitCode = unitCode;
-    return this;
-  }
-
-   /**
-   * Get unitCode
-   * @return unitCode
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_UNIT_CODE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getUnitCode() {
-    return unitCode;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_UNIT_CODE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setUnitCode(String unitCode) {
-    this.unitCode = unitCode;
-  }
-
-
-  public Allowances product(AllowancesProduct product) {
-    this.product = product;
-    return this;
-  }
-
-   /**
-   * Get product
-   * @return product
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_PRODUCT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public AllowancesProduct getProduct() {
-    return product;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_PRODUCT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setProduct(AllowancesProduct product) {
-    this.product = product;
-  }
-
-
-  public Allowances assignments(List<AllowancesAssignmentsItem> assignments) {
-    this.assignments = assignments;
-    return this;
-  }
-
-  public Allowances addAssignmentsItem(AllowancesAssignmentsItem assignmentsItem) {
-    if (this.assignments == null) {
-      this.assignments = new ArrayList<>();
+  public Allowances addTechnicalResourceTypesItem(String technicalResourceTypesItem) {
+    if (this.technicalResourceTypes == null) {
+      this.technicalResourceTypes = new ArrayList<>();
     }
-    this.assignments.add(assignmentsItem);
+    this.technicalResourceTypes.add(technicalResourceTypesItem);
     return this;
   }
 
    /**
-   * Get assignments
-   * @return assignments
+   * Get technicalResourceTypes
+   * @return technicalResourceTypes
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ASSIGNMENTS)
+  @JsonProperty(JSON_PROPERTY_TECHNICAL_RESOURCE_TYPES)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public List<AllowancesAssignmentsItem> getAssignments() {
-    return assignments;
+  public List<String> getTechnicalResourceTypes() {
+    return technicalResourceTypes;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ASSIGNMENTS)
+  @JsonProperty(JSON_PROPERTY_TECHNICAL_RESOURCE_TYPES)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAssignments(List<AllowancesAssignmentsItem> assignments) {
-    this.assignments = assignments;
+  public void setTechnicalResourceTypes(List<String> technicalResourceTypes) {
+    this.technicalResourceTypes = technicalResourceTypes;
+  }
+
+
+  public Allowances marketSpecificAttributes(List<AllowancesMarketSpecificAttributesItem> marketSpecificAttributes) {
+    this.marketSpecificAttributes = marketSpecificAttributes;
+    return this;
+  }
+
+  public Allowances addMarketSpecificAttributesItem(AllowancesMarketSpecificAttributesItem marketSpecificAttributesItem) {
+    if (this.marketSpecificAttributes == null) {
+      this.marketSpecificAttributes = new ArrayList<>();
+    }
+    this.marketSpecificAttributes.add(marketSpecificAttributesItem);
+    return this;
+  }
+
+   /**
+   * Get marketSpecificAttributes
+   * @return marketSpecificAttributes
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_MARKET_SPECIFIC_ATTRIBUTES)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public List<AllowancesMarketSpecificAttributesItem> getMarketSpecificAttributes() {
+    return marketSpecificAttributes;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_MARKET_SPECIFIC_ATTRIBUTES)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setMarketSpecificAttributes(List<AllowancesMarketSpecificAttributesItem> marketSpecificAttributes) {
+    this.marketSpecificAttributes = marketSpecificAttributes;
   }
 
 
@@ -641,6 +276,56 @@ public class Allowances {
   }
 
 
+  public Allowances createdAt(String createdAt) {
+    this.createdAt = createdAt;
+    return this;
+  }
+
+   /**
+   * Get createdAt
+   * @return createdAt
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CREATED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getCreatedAt() {
+    return createdAt;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CREATED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCreatedAt(String createdAt) {
+    this.createdAt = createdAt;
+  }
+
+
+  public Allowances changedAt(String changedAt) {
+    this.changedAt = changedAt;
+    return this;
+  }
+
+   /**
+   * Get changedAt
+   * @return changedAt
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getChangedAt() {
+    return changedAt;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setChangedAt(String changedAt) {
+    this.changedAt = changedAt;
+  }
+
+
   /**
    * Return true if this Allowances object is equal to o.
    */
@@ -653,57 +338,35 @@ public class Allowances {
       return false;
     }
     Allowances allowances = (Allowances) o;
-    return Objects.equals(this.metaData, allowances.metaData) &&
-        Objects.equals(this.allowanceId, allowances.allowanceId) &&
+    return Objects.equals(this.id, allowances.id) &&
+        Objects.equals(this.number, allowances.number) &&
         Objects.equals(this.description, allowances.description) &&
-        Objects.equals(this.documentNumber, allowances.documentNumber) &&
-        Objects.equals(this.allowanceDocumentId, allowances.allowanceDocumentId) &&
-        Objects.equals(this.mainSubscriptionId, allowances.mainSubscriptionId) &&
-        Objects.equals(this.mainSubscriptionDocumentId, allowances.mainSubscriptionDocumentId) &&
-        Objects.equals(this.allowanceTemplateId, allowances.allowanceTemplateId) &&
-        Objects.equals(this.customerId, allowances.customerId) &&
-        Objects.equals(this.market, allowances.market) &&
-        Objects.equals(this.currency, allowances.currency) &&
-        Objects.equals(this.subscriptionTimeZone, allowances.subscriptionTimeZone) &&
-        Objects.equals(this.validFrom, allowances.validFrom) &&
-        Objects.equals(this.validUntil, allowances.validUntil) &&
-        Objects.equals(this.status, allowances.status) &&
-        Objects.equals(this.balance, allowances.balance) &&
-        Objects.equals(this.unitCode, allowances.unitCode) &&
-        Objects.equals(this.product, allowances.product) &&
-        Objects.equals(this.assignments, allowances.assignments) &&
-        Objects.equals(this.notificationSettings, allowances.notificationSettings);
+        Objects.equals(this.published, allowances.published) &&
+        Objects.equals(this.technicalResourceTypes, allowances.technicalResourceTypes) &&
+        Objects.equals(this.marketSpecificAttributes, allowances.marketSpecificAttributes) &&
+        Objects.equals(this.notificationSettings, allowances.notificationSettings) &&
+        Objects.equals(this.createdAt, allowances.createdAt) &&
+        Objects.equals(this.changedAt, allowances.changedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(metaData, allowanceId, description, documentNumber, allowanceDocumentId, mainSubscriptionId, mainSubscriptionDocumentId, allowanceTemplateId, customerId, market, currency, subscriptionTimeZone, validFrom, validUntil, status, balance, unitCode, product, assignments, notificationSettings);
+    return Objects.hash(id, number, description, published, technicalResourceTypes, marketSpecificAttributes, notificationSettings, createdAt, changedAt);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Allowances {\n");
-    sb.append("    metaData: ").append(toIndentedString(metaData)).append("\n");
-    sb.append("    allowanceId: ").append(toIndentedString(allowanceId)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    number: ").append(toIndentedString(number)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    documentNumber: ").append(toIndentedString(documentNumber)).append("\n");
-    sb.append("    allowanceDocumentId: ").append(toIndentedString(allowanceDocumentId)).append("\n");
-    sb.append("    mainSubscriptionId: ").append(toIndentedString(mainSubscriptionId)).append("\n");
-    sb.append("    mainSubscriptionDocumentId: ").append(toIndentedString(mainSubscriptionDocumentId)).append("\n");
-    sb.append("    allowanceTemplateId: ").append(toIndentedString(allowanceTemplateId)).append("\n");
-    sb.append("    customerId: ").append(toIndentedString(customerId)).append("\n");
-    sb.append("    market: ").append(toIndentedString(market)).append("\n");
-    sb.append("    currency: ").append(toIndentedString(currency)).append("\n");
-    sb.append("    subscriptionTimeZone: ").append(toIndentedString(subscriptionTimeZone)).append("\n");
-    sb.append("    validFrom: ").append(toIndentedString(validFrom)).append("\n");
-    sb.append("    validUntil: ").append(toIndentedString(validUntil)).append("\n");
-    sb.append("    status: ").append(toIndentedString(status)).append("\n");
-    sb.append("    balance: ").append(toIndentedString(balance)).append("\n");
-    sb.append("    unitCode: ").append(toIndentedString(unitCode)).append("\n");
-    sb.append("    product: ").append(toIndentedString(product)).append("\n");
-    sb.append("    assignments: ").append(toIndentedString(assignments)).append("\n");
+    sb.append("    published: ").append(toIndentedString(published)).append("\n");
+    sb.append("    technicalResourceTypes: ").append(toIndentedString(technicalResourceTypes)).append("\n");
+    sb.append("    marketSpecificAttributes: ").append(toIndentedString(marketSpecificAttributes)).append("\n");
     sb.append("    notificationSettings: ").append(toIndentedString(notificationSettings)).append("\n");
+    sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
+    sb.append("    changedAt: ").append(toIndentedString(changedAt)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -751,14 +414,14 @@ public class Allowances {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `metaData` to the URL query string
-    if (getMetaData() != null) {
-      joiner.add(getMetaData().toUrlQueryString(prefix + "metaData" + suffix));
+    // add `id` to the URL query string
+    if (getId() != null) {
+      joiner.add(String.format("%sid%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `allowanceId` to the URL query string
-    if (getAllowanceId() != null) {
-      joiner.add(String.format("%sallowanceId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getAllowanceId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `number` to the URL query string
+    if (getNumber() != null) {
+      joiner.add(String.format("%snumber%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getNumber()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     // add `description` to the URL query string
@@ -766,86 +429,25 @@ public class Allowances {
       joiner.add(String.format("%sdescription%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getDescription()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `documentNumber` to the URL query string
-    if (getDocumentNumber() != null) {
-      joiner.add(String.format("%sdocumentNumber%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getDocumentNumber()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `published` to the URL query string
+    if (getPublished() != null) {
+      joiner.add(String.format("%spublished%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getPublished()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `allowanceDocumentId` to the URL query string
-    if (getAllowanceDocumentId() != null) {
-      joiner.add(String.format("%sallowanceDocumentId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getAllowanceDocumentId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `technicalResourceTypes` to the URL query string
+    if (getTechnicalResourceTypes() != null) {
+      for (int i = 0; i < getTechnicalResourceTypes().size(); i++) {
+        joiner.add(String.format("%stechnicalResourceTypes%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix),
+            URLEncoder.encode(String.valueOf(getTechnicalResourceTypes().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+      }
     }
 
-    // add `mainSubscriptionId` to the URL query string
-    if (getMainSubscriptionId() != null) {
-      joiner.add(String.format("%smainSubscriptionId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getMainSubscriptionId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `mainSubscriptionDocumentId` to the URL query string
-    if (getMainSubscriptionDocumentId() != null) {
-      joiner.add(String.format("%smainSubscriptionDocumentId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getMainSubscriptionDocumentId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `allowanceTemplateId` to the URL query string
-    if (getAllowanceTemplateId() != null) {
-      joiner.add(String.format("%sallowanceTemplateId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getAllowanceTemplateId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `customerId` to the URL query string
-    if (getCustomerId() != null) {
-      joiner.add(String.format("%scustomerId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCustomerId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `market` to the URL query string
-    if (getMarket() != null) {
-      joiner.add(getMarket().toUrlQueryString(prefix + "market" + suffix));
-    }
-
-    // add `currency` to the URL query string
-    if (getCurrency() != null) {
-      joiner.add(String.format("%scurrency%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCurrency()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `subscriptionTimeZone` to the URL query string
-    if (getSubscriptionTimeZone() != null) {
-      joiner.add(String.format("%ssubscriptionTimeZone%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSubscriptionTimeZone()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `validFrom` to the URL query string
-    if (getValidFrom() != null) {
-      joiner.add(String.format("%svalidFrom%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getValidFrom()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `validUntil` to the URL query string
-    if (getValidUntil() != null) {
-      joiner.add(String.format("%svalidUntil%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getValidUntil()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `status` to the URL query string
-    if (getStatus() != null) {
-      joiner.add(String.format("%sstatus%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getStatus()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `balance` to the URL query string
-    if (getBalance() != null) {
-      joiner.add(getBalance().toUrlQueryString(prefix + "balance" + suffix));
-    }
-
-    // add `unitCode` to the URL query string
-    if (getUnitCode() != null) {
-      joiner.add(String.format("%sunitCode%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getUnitCode()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `product` to the URL query string
-    if (getProduct() != null) {
-      joiner.add(getProduct().toUrlQueryString(prefix + "product" + suffix));
-    }
-
-    // add `assignments` to the URL query string
-    if (getAssignments() != null) {
-      for (int i = 0; i < getAssignments().size(); i++) {
-        if (getAssignments().get(i) != null) {
-          joiner.add(getAssignments().get(i).toUrlQueryString(String.format("%sassignments%s%s", prefix, suffix,
+    // add `marketSpecificAttributes` to the URL query string
+    if (getMarketSpecificAttributes() != null) {
+      for (int i = 0; i < getMarketSpecificAttributes().size(); i++) {
+        if (getMarketSpecificAttributes().get(i) != null) {
+          joiner.add(getMarketSpecificAttributes().get(i).toUrlQueryString(String.format("%smarketSpecificAttributes%s%s", prefix, suffix,
           "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
@@ -858,6 +460,16 @@ public class Allowances {
             "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix),
             URLEncoder.encode(String.valueOf(getNotificationSettings().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
       }
+    }
+
+    // add `createdAt` to the URL query string
+    if (getCreatedAt() != null) {
+      joiner.add(String.format("%screatedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCreatedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `changedAt` to the URL query string
+    if (getChangedAt() != null) {
+      joiner.add(String.format("%schangedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getChangedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     return joiner.toString();

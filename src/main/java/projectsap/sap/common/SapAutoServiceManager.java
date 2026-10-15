@@ -9,6 +9,8 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import projectsap.sap.core.db.DatabaseManager;
 
 import java.io.File;
@@ -31,7 +33,10 @@ import java.util.Map;
  */
 public class SapAutoServiceManager {
 
-    private static final String API_KEY = "wITmrAEUGLzlYWC2my5UOKunJinBNwe4";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SapAutoServiceManager.class);
+
+    private static final String DEFAULT_API_KEY = "wITmrAEUGLzlYWC2my5UOKunJinBNwe4";
+    private static final String API_KEY = DatabaseManager.getSetting("sap.api.key", "SAP_API_KEY", DEFAULT_API_KEY);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) {
@@ -74,8 +79,7 @@ public class SapAutoServiceManager {
         try {
             setupService(serviceName, urlOrPath);
         } catch (Exception e) {
-            System.err.println("\n[ERROR] Service setup failed: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("Service setup failed for '{}': {}", serviceName, e.getMessage(), e);
         }
     }
 

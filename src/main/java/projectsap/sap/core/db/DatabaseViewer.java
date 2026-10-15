@@ -84,7 +84,6 @@ public class DatabaseViewer {
 
         } catch (Exception e) {
             System.err.println("[ERROR] Error viewing database data: " + e.getMessage());
-            e.printStackTrace();
         }
 
         System.out.println("==================================================================");

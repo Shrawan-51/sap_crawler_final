@@ -8,128 +8,45 @@
   "paths" : { },
   "components" : {
     "schemas" : {
-      "AllowancesMetaData" : {
+      "AllowancesMarketSpecificAttributesItem" : {
         "type" : "object",
         "properties" : {
-          "version" : {
+          "marketId" : {
+            "type" : "string"
+          },
+          "initialBalance" : {
             "type" : "integer"
-          }
-        }
-      },
-      "AllowancesMarket" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
           },
-          "timeZone" : {
-            "type" : "string"
-          },
-          "currency" : {
-            "type" : "string"
-          }
-        }
-      },
-      "AllowancesBalance" : {
-        "type" : "object",
-        "properties" : {
-          "initial" : {
-            "type" : "number"
-          },
-          "remaining" : {
-            "type" : "number"
-          }
-        }
-      },
-      "AllowancesProduct" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "code" : {
-            "type" : "string"
-          }
-        }
-      },
-      "AllowancesAssignmentsItem" : {
-        "type" : "object",
-        "properties" : {
-          "subscriptionId" : {
-            "type" : "string"
-          },
-          "subscriptionDocumentId" : {
-            "type" : "string"
-          },
-          "technicalResourceId" : {
-            "type" : "string"
-          },
-          "technicalResourceType" : {
-            "type" : "string"
+          "expiresAfter" : {
+            "type" : "integer"
           }
         }
       },
       "Allowances" : {
         "type" : "object",
         "properties" : {
-          "metaData" : {
-            "$ref" : "#/components/schemas/AllowancesMetaData"
-          },
-          "allowanceId" : {
+          "id" : {
             "type" : "string"
+          },
+          "number" : {
+            "type" : "integer"
           },
           "description" : {
             "type" : "string"
           },
-          "documentNumber" : {
-            "type" : "integer"
+          "published" : {
+            "type" : "boolean"
           },
-          "allowanceDocumentId" : {
-            "type" : "string"
-          },
-          "mainSubscriptionId" : {
-            "type" : "string"
-          },
-          "mainSubscriptionDocumentId" : {
-            "type" : "string"
-          },
-          "allowanceTemplateId" : {
-            "type" : "string"
-          },
-          "customerId" : {
-            "type" : "string"
-          },
-          "market" : {
-            "$ref" : "#/components/schemas/AllowancesMarket"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "subscriptionTimeZone" : {
-            "type" : "string"
-          },
-          "validFrom" : {
-            "type" : "string"
-          },
-          "validUntil" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "balance" : {
-            "$ref" : "#/components/schemas/AllowancesBalance"
-          },
-          "unitCode" : {
-            "type" : "string"
-          },
-          "product" : {
-            "$ref" : "#/components/schemas/AllowancesProduct"
-          },
-          "assignments" : {
+          "technicalResourceTypes" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/AllowancesAssignmentsItem"
+              "type" : "string"
+            }
+          },
+          "marketSpecificAttributes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AllowancesMarketSpecificAttributesItem"
             }
           },
           "notificationSettings" : {
@@ -137,6 +54,12 @@
             "items" : {
               "type" : "object"
             }
+          },
+          "createdAt" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "type" : "string"
           }
         }
       }

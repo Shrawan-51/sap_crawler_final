@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import projectsap.sap.bill.model.*;
 import projectsap.sap.common.GenericSapParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -19,6 +21,8 @@ import java.util.*;
  * and fallback to H2 embedded database if PostgreSQL is not reachable.
  */
 public class DatabaseManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseManager.class);
 
     // â”€â”€ PostgreSQL Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     private static final String PG_HOST = getSetting("db.host", "DB_HOST", "localhost");
@@ -69,12 +73,12 @@ public class DatabaseManager {
                     activeUser = PG_USER;
                     activePass = PG_PASS;
                     dbEngineName = "PostgreSQL (localhost:5432/" + PG_DB + ")";
-                    System.out.println("[DB] Successfully connected to PostgreSQL database: " + PG_DB);
+                    LOGGER.info("Successfully connected to PostgreSQL database: {}", PG_DB);
                     return true;
                 }
             }
         } catch (Exception e) {
-            System.err.println("[DB] PostgreSQL connection attempt failed: " + e.getMessage());
+            LOGGER.warn("PostgreSQL connection attempt failed (falling back to H2): {}", e.getMessage());
         }
 
         // 2. Fallback to H2 Embedded
@@ -84,32 +88,42 @@ public class DatabaseManager {
                 activeUser = H2_USER;
                 activePass = H2_PASS;
                 dbEngineName = "H2 Embedded Database";
-                System.out.println("[DB] Connected to H2 Embedded Database fallback.");
+                LOGGER.info("Connected to H2 Embedded Database fallback.");
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println("[DB] H2 connection test failed: " + e.getMessage());
+            LOGGER.error("H2 embedded database connection test failed: {}", e.getMessage());
         }
 
         return false;
     }
 
     /**
-     * Auto-creates the 'sap_bills' database in PostgreSQL if it doesn't exist.
+     * Auto-creates the target database in PostgreSQL if it doesn't exist.
+     * Sanitizes database name to prevent SQL injection.
      */
     private static void ensurePostgresDatabaseExists() {
         String maintenanceUrl = "jdbc:postgresql://" + PG_HOST + ":" + PG_PORT + "/postgres";
-        try (Connection conn = DriverManager.getConnection(maintenanceUrl, PG_USER, PG_PASS);
-             Statement stmt = conn.createStatement()) {
-
-            ResultSet rs = stmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + PG_DB + "'");
-            if (!rs.next()) {
-                System.out.println("[DB] PostgreSQL database '" + PG_DB + "' does not exist. Creating it now...");
-                stmt.execute("CREATE DATABASE " + PG_DB);
-                System.out.println("[DB] Database '" + PG_DB + "' created successfully!");
+        try (Connection conn = DriverManager.getConnection(maintenanceUrl, PG_USER, PG_PASS)) {
+            String checkSql = "SELECT 1 FROM pg_database WHERE datname = ?";
+            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                ps.setString(1, PG_DB);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        if (PG_DB.matches("^[a-zA-Z0-9_]+$")) {
+                            LOGGER.info("PostgreSQL database '{}' does not exist. Creating it now...", PG_DB);
+                            try (Statement stmt = conn.createStatement()) {
+                                stmt.execute("CREATE DATABASE " + PG_DB);
+                            }
+                            LOGGER.info("Database '{}' created successfully!", PG_DB);
+                        } else {
+                            LOGGER.warn("Database name '{}' contains invalid characters. Skipping auto-create.", PG_DB);
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
-            System.out.println("[DB] Maintenance check note: " + e.getMessage());
+            LOGGER.debug("PostgreSQL maintenance check note: {}", e.getMessage());
         }
     }
 
@@ -194,7 +208,7 @@ public class DatabaseManager {
             stmt.execute(createBillsTable);
             stmt.execute(createFetchLogTable);
             stmt.execute(createSubscriptionsTable);
-            System.out.println("[DB] Database tables ('bills', 'subscriptions', 'fetch_log') verified/initialized in " + dbEngineName + ".");
+            LOGGER.info("Database tables ('bills', 'subscriptions', 'fetch_log') verified/initialized in {}.", dbEngineName);
         }
     }
 
@@ -205,9 +219,9 @@ public class DatabaseManager {
      * @return Number of bills saved/updated.
      */
     public static int saveBills(String jsonArrayString) throws Exception {
-        System.out.println("[DB] Auto-converting SAP API JSON response to List<Bill> POJOs...");
+        LOGGER.debug("Auto-converting SAP API JSON response to List<Bill> POJOs...");
         List<Bill> bills = GenericSapParser.parseList(jsonArrayString, Bill.class);
-        System.out.println("[DB] Successfully auto-converted " + bills.size() + " Bill POJO objects (zero manual mapping).");
+        LOGGER.info("Successfully parsed {} Bill POJO objects.", bills.size());
         return saveBills(bills);
     }
 
@@ -258,9 +272,10 @@ public class DatabaseManager {
                     if (id == null) continue;
 
                     psCheck.setString(1, id);
-                    ResultSet rs = psCheck.executeQuery();
-                    boolean exists = rs.next();
-                    rs.close();
+                    boolean exists;
+                    try (ResultSet rs = psCheck.executeQuery()) {
+                        exists = rs.next();
+                    }
 
                     String rawJson = GenericSapParser.toJson(bill);
 
@@ -277,10 +292,11 @@ public class DatabaseManager {
                 }
 
                 conn.commit();
-                System.out.println("[DB] Saved/Updated " + count + " bills in " + dbEngineName + " using Bill POJOs.");
+                LOGGER.info("Saved/Updated {} bills in {} using Bill POJOs.", count, dbEngineName);
                 logFetch(conn, count, "SUCCESS", "Fetched and saved " + count + " bills using auto POJO conversion");
             } catch (Exception e) {
                 conn.rollback();
+                LOGGER.error("Failed to persist bills transaction: {}", e.getMessage(), e);
                 throw e;
             } finally {
                 conn.setAutoCommit(true);
@@ -347,7 +363,7 @@ public class DatabaseManager {
                 """;
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(createSubscriptionsTable);
-                System.out.println("[DB] Auto-created dedicated table 'subscriptions' in " + dbEngineName + ".");
+                LOGGER.info("Auto-created dedicated table 'subscriptions' in {}.", dbEngineName);
             }
             return;
         }
@@ -392,7 +408,7 @@ public class DatabaseManager {
 
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(ddl.toString());
-            System.out.println("[DB] Auto-generated and created table '" + tableName + "' in " + dbEngineName + ".");
+            LOGGER.info("Auto-generated and created table '{}' in {}.", tableName, dbEngineName);
         }
     }
 
@@ -433,7 +449,7 @@ public class DatabaseManager {
         }
 
         if (items.isEmpty()) {
-            System.out.println("[DB] No records found in payload for service '" + serviceName + "'.");
+            LOGGER.warn("No records found in payload for service '{}'.", serviceName);
             return 0;
         }
 
@@ -549,10 +565,11 @@ public class DatabaseManager {
                     }
 
                     conn.commit();
-                    System.out.println("[DB] Auto-stored/updated " + count + " records in table '" + tableName + "' (" + dbEngineName + ").");
+                    LOGGER.info("Auto-stored/updated {} records in table '{}' ({}).", count, tableName, dbEngineName);
                     logFetch(conn, count, "SUCCESS", "Saved " + count + " " + serviceName + " records to table " + tableName);
                 } catch (Exception e) {
                     conn.rollback();
+                    LOGGER.error("Failed to persist service records for '{}': {}", serviceName, e.getMessage(), e);
                     throw e;
                 }
             } finally {
@@ -978,7 +995,7 @@ public class DatabaseManager {
             ps.setString(3, message);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("[DB] Failed to log fetch: " + e.getMessage());
+            LOGGER.error("Failed to log fetch event: {}", e.getMessage(), e);
         }
     }
 
@@ -986,7 +1003,7 @@ public class DatabaseManager {
         try (Connection conn = getConnection()) {
             logFetch(conn, 0, "ERROR", message);
         } catch (SQLException e) {
-            System.err.println("[DB] Failed to log fetch error: " + e.getMessage());
+            LOGGER.error("Failed to log fetch error: {}", e.getMessage(), e);
         }
     }
 
@@ -1015,7 +1032,10 @@ public class DatabaseManager {
                 .replace("\t", "\\t");
     }
 
-    private static String getSetting(String sysProp, String envVar, String defaultVal) {
+    /**
+     * Resolves configuration setting from system properties, environment variables, or local .env file.
+     */
+    public static String getSetting(String sysProp, String envVar, String defaultVal) {
         String val = System.getProperty(sysProp);
         if (val != null && !val.isEmpty()) return val;
         val = System.getenv(envVar);

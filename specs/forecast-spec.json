@@ -1,0 +1,244 @@
+{
+  "openapi" : "3.0.0",
+  "info" : {
+    "title" : "SAP Forecast Service API",
+    "version" : "1.0.0",
+    "description" : "Auto-generated OpenAPI 3.0 specification for SAP forecast"
+  },
+  "paths" : { },
+  "components" : {
+    "schemas" : {
+      "ForecastMarketSalesArea" : {
+        "type" : "object",
+        "properties" : { }
+      },
+      "ForecastMarket" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timeZone" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "priceType" : {
+            "type" : "string"
+          },
+          "salesArea" : {
+            "$ref" : "#/components/schemas/ForecastMarketSalesArea"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemMonetaryAmount" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "taxIncluded" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemQuantity" : {
+        "type" : "object",
+        "properties" : {
+          "value" : {
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemRatingPeriod" : {
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemAppliedSubscriptionPeriod" : {
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemPricingElementsItemConditionValue" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "currency" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItemPricingElementsItem" : {
+        "type" : "object",
+        "properties" : {
+          "conditionType" : {
+            "type" : "string"
+          },
+          "conditionValue" : {
+            "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemPricingElementsItemConditionValue"
+          }
+        }
+      },
+      "ForecastForecastsItemItemsItem" : {
+        "type" : "object",
+        "properties" : {
+          "itemId" : {
+            "type" : "string"
+          },
+          "metricId" : {
+            "type" : "string"
+          },
+          "ratePlanId" : {
+            "type" : "string"
+          },
+          "ratingType" : {
+            "type" : "string"
+          },
+          "billingType" : {
+            "type" : "string"
+          },
+          "monetaryAmount" : {
+            "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemMonetaryAmount"
+          },
+          "quantity" : {
+            "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemQuantity"
+          },
+          "dueAt" : {
+            "type" : "string"
+          },
+          "billingCycle" : {
+            "type" : "string"
+          },
+          "ratingPeriod" : {
+            "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemRatingPeriod"
+          },
+          "appliedSubscriptionPeriod" : {
+            "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemAppliedSubscriptionPeriod"
+          },
+          "paused" : {
+            "type" : "boolean"
+          },
+          "pricingElements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ForecastForecastsItemItemsItemPricingElementsItem"
+            }
+          }
+        }
+      },
+      "ForecastForecastsItem" : {
+        "type" : "object",
+        "properties" : {
+          "forecastId" : {
+            "type" : "string"
+          },
+          "subscriptionItemId" : {
+            "type" : "string"
+          },
+          "forecastTypeId" : {
+            "type" : "string"
+          },
+          "horizon" : {
+            "type" : "integer"
+          },
+          "horizonUnit" : {
+            "type" : "string"
+          },
+          "horizonEndDate" : {
+            "type" : "string"
+          },
+          "forecastEndDate" : {
+            "type" : "string"
+          },
+          "obsolete" : {
+            "type" : "boolean"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ForecastForecastsItemItemsItem"
+            }
+          }
+        }
+      },
+      "Forecast" : {
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "string"
+          },
+          "payerId" : {
+            "type" : "string"
+          },
+          "sequenceNumber" : {
+            "type" : "integer"
+          },
+          "subscriptionId" : {
+            "type" : "string"
+          },
+          "subscriptionDocumentId" : {
+            "type" : "string"
+          },
+          "subscriptionValidFrom" : {
+            "type" : "string"
+          },
+          "subscriptionCreatedAt" : {
+            "type" : "string"
+          },
+          "subscriptionChangedAt" : {
+            "type" : "string"
+          },
+          "subscriptionVersion" : {
+            "type" : "integer"
+          },
+          "subscriptionTimeZone" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "billingCycle" : {
+            "type" : "string"
+          },
+          "billingCycleReferenceDate" : {
+            "type" : "string"
+          },
+          "market" : {
+            "$ref" : "#/components/schemas/ForecastMarket"
+          },
+          "forecasts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ForecastForecastsItem"
+            }
+          }
+        }
+      }
+    }
+  }
+}

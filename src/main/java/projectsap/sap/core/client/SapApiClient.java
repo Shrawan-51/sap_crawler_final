@@ -9,16 +9,26 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.util.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import projectsap.sap.core.db.DatabaseManager;
 
 import java.io.IOException;
 
 /**
  * Apache HttpClient 5 client for fetching bill data from SAP Subscription Billing API.
+ * Follows industry-standard connection timeouts, structured SLF4J logging, and externalized config.
  */
 public class SapApiClient {
 
-    private static final String API_KEY = "wITmrAEUGLzlYWC2my5UOKunJinBNwe4";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SapApiClient.class);
+
+    private static final String DEFAULT_API_KEY = "wITmrAEUGLzlYWC2my5UOKunJinBNwe4";
+    private static final String API_KEY = DatabaseManager.getSetting("sap.api.key", "SAP_API_KEY", DEFAULT_API_KEY);
     private static final String API_URL = "https://sandbox.api.sap.com/subscriptionbilling/api/bill/v2/bills?pageNumber=1&pageSize=40&%24count=true";
+
+    private static final int CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int RESPONSE_TIMEOUT_SECONDS = 15;
 
     /**
      * Fetches bills from SAP Sandbox API using Apache HttpClient 5.
@@ -40,11 +50,11 @@ public class SapApiClient {
      * @throws ParseException If response body parsing fails.
      */
     public static String fetchFromUrl(String url) throws IOException, ParseException {
-        System.out.println("[SapApiClient] Initializing Apache HttpClient 5 request to: " + url);
+        LOGGER.info("Executing SAP API request to endpoint: {}", url);
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(Timeout.ofSeconds(10))
-                .setResponseTimeout(Timeout.ofSeconds(15))
+                .setConnectTimeout(Timeout.ofSeconds(CONNECT_TIMEOUT_SECONDS))
+                .setResponseTimeout(Timeout.ofSeconds(RESPONSE_TIMEOUT_SECONDS))
                 .build();
 
         try (CloseableHttpClient httpClient = HttpClients.custom()
@@ -61,10 +71,10 @@ public class SapApiClient {
                 String responseBody = entity != null ? EntityUtils.toString(entity) : "";
 
                 if (statusCode >= 200 && statusCode < 300) {
-                    System.out.println("[SapApiClient] Received HTTP " + statusCode + " response (" + responseBody.length() + " bytes).");
+                    LOGGER.info("Received HTTP {} success response ({} bytes).", statusCode, responseBody.length());
                     return responseBody;
                 } else {
-                    System.err.println("[SapApiClient] API returned HTTP error " + statusCode + ": " + responseBody);
+                    LOGGER.error("SAP API returned HTTP error {}: {}", statusCode, responseBody);
                     throw new IOException("SAP API request failed with status code " + statusCode + ": " + responseBody);
                 }
             }
