@@ -2,6 +2,15 @@
    SAP Billing Dashboard — Application Logic
    ═══════════════════════════════════════════════════════════════ */
 
+// ── API Base Auto-Detector ──────────────────────────────────
+const API_BASE = (function() {
+    if (window.location.protocol.startsWith('http')) {
+        return window.location.origin;
+    }
+    // Default fallback if opened via file:// protocol
+    return 'http://localhost:8085';
+})();
+
 // ── State ───────────────────────────────────────────────────
 let allBills = [];
 let currentView = 'dashboard';
@@ -107,7 +116,7 @@ function initEventListeners() {
 async function loadDashboard() {
     try {
         // Load stats
-        const statsRes = await fetch('/api/stats');
+        const statsRes = await fetch(`${API_BASE}/api/stats`);
         const stats = await statsRes.json();
 
         if (stats.error) {
@@ -122,7 +131,7 @@ async function loadDashboard() {
         updateLastSyncInfo(stats.lastSync);
 
         // Load recent bills
-        const billsRes = await fetch('/api/bills');
+        const billsRes = await fetch(`${API_BASE}/api/bills`);
         const bills = await billsRes.json();
         allBills = Array.isArray(bills) ? bills : [];
         renderRecentBills(allBills.slice(0, 8));
@@ -312,7 +321,7 @@ async function loadBillsFromDB() {
     const type = document.getElementById('filterType').value;
     const currency = document.getElementById('filterCurrency').value;
 
-    let url = '/api/bills?';
+    let url = `${API_BASE}/api/bills?`;
     if (status) url += `status=${encodeURIComponent(status)}&`;
     if (type) url += `type=${encodeURIComponent(type)}&`;
     if (currency) url += `currency=${encodeURIComponent(currency)}&`;
@@ -706,7 +715,7 @@ async function triggerSync() {
     if (resultDiv) resultDiv.style.display = 'none';
 
     try {
-        const res = await fetch('/api/sync');
+        const res = await fetch(`${API_BASE}/api/sync`);
         const data = await res.json();
 
         if (data.success) {
@@ -760,7 +769,7 @@ async function loadFetchHistory() {
     const container = document.getElementById('fetchHistoryContainer');
 
     try {
-        const res = await fetch('/api/fetch-log');
+        const res = await fetch(`${API_BASE}/api/fetch-log`);
         const logs = await res.json();
 
         if (!Array.isArray(logs) || logs.length === 0) {
