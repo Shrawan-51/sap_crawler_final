@@ -1,528 +1,1002 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAP Enterprise Service Hub & Analytics Platform</title>
-    <meta name="description" content="Next-generation dynamic analytics dashboard for SAP Subscription Billing services with automated schema discovery and real-time visualization.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP Subscription Billing — Data Operations Console</title>
+  <meta name="description" content="Enterprise data operations console for SAP Subscription Billing. Automated SAP data ingestion, dynamic schema generation, and subscription billing analytics.">
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Chart.js 4.4.0 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="/frontend/styles.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="/frontend/styles.css">
 </head>
 <body>
 
-    <!-- ══════════════ SIDEBAR NAVIGATION ══════════════ -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-logo">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                    <polyline points="2 17 12 22 22 17"></polyline>
-                    <polyline points="2 12 12 17 22 12"></polyline>
-                </svg>
-            </div>
-            <div class="brand-meta">
-                <span class="brand-name">SAP Hub</span>
-                <span class="brand-tag">Enterprise Analytics</span>
-            </div>
-        </div>
-
-        <div class="sidebar-scroll">
-            <!-- Global Nav -->
-            <div class="nav-section-title">PLATFORM</div>
-            <nav class="sidebar-nav">
-                <button class="nav-item active" data-view="overview" id="nav-overview">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    <span>Overview</span>
-                </button>
-                <button class="nav-item" data-view="sync-history" id="nav-sync-history">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <polyline points="1 20 1 14 7 14"></polyline>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                    </svg>
-                    <span>Sync & Logs</span>
-                </button>
-            </nav>
-
-            <!-- Dynamic Services Nav Header -->
-            <div class="nav-section-header">
-                <span class="nav-section-title">SERVICES</span>
-                <button class="btn-icon-xs" id="sidebarAddServiceBtn" title="Register New Service">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Dynamic Services List (Generated via JS) -->
-            <nav class="sidebar-nav dynamic-services-nav" id="dynamicServicesNav">
-                <div class="sidebar-loading-item">
-                    <div class="pulse-bar"></div>
-                </div>
-            </nav>
-        </div>
-
-        <!-- Sidebar Footer -->
-        <div class="sidebar-footer">
-            <button class="btn-add-service-trigger" id="btnOpenAddService">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>Add SAP Service</span>
-            </button>
-            <div class="db-status-pill" id="dbStatusPill">
-                <span class="status-indicator-dot online"></span>
-                <span class="db-status-text">Neon PostgreSQL</span>
-            </div>
-        </div>
-    </aside>
-
-    <!-- ══════════════ MAIN CONTENT WRAPPER ══════════════ -->
-    <main class="main-wrapper">
-
-        <!-- Top Header Bar -->
-        <header class="topbar">
-            <div class="topbar-left">
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="breadcrumbs" id="breadcrumbs">
-                    <span class="bc-item">SAP Hub</span>
-                    <span class="bc-sep">/</span>
-                    <span class="bc-item bc-active" id="currentViewCrumb">Overview</span>
-                </div>
-            </div>
-
-            <div class="topbar-right">
-                <div class="badge-env" title="Connected Cloud DB">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                    </svg>
-                    <span>Neon DB Active</span>
-                </div>
-
-                <button class="topbar-btn" id="topbarRefreshBtn" title="Refresh Dashboard Data">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                    </svg>
-                    <span>Refresh</span>
-                </button>
-
-                <button class="topbar-btn btn-primary-accent" id="topbarAddBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>New Service</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- View Body Content -->
-        <div class="view-body">
-
-            <!-- ═════════ 1. OVERVIEW VIEW ═════════ -->
-            <section class="view-pane active" id="view-overview">
-                <!-- Welcome Banner -->
-                <div class="hero-card">
-                    <div class="hero-content">
-                        <h1 class="hero-title">SAP Enterprise Data Hub</h1>
-                        <p class="hero-desc">Universal real-time dashboard for all SAP Subscription Billing microservices. Automatically inspects incoming schema, creates persistent cloud storage, and generates interactive analytics.</p>
-                        <div class="hero-meta-tags">
-                            <span class="meta-tag"><strong id="heroTotalServices">0</strong> Registered Services</span>
-                            <span class="meta-tag"><strong id="heroTotalRecords">0</strong> Total Cached Records</span>
-                            <span class="meta-tag highlight"><strong id="heroDbEngine">Neon Cloud PostgreSQL</strong></span>
-                        </div>
-                    </div>
-                    <div class="hero-actions">
-                        <button class="btn-hero-primary" id="heroAddServiceBtn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="16"></line>
-                                <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg>
-                            Add New Service
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Aggregated KPIs -->
-                <div class="kpi-grid" id="overviewKpiGrid">
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box cyan">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-details">
-                            <span class="kpi-label">Active Services</span>
-                            <span class="kpi-value" id="kpiActiveServices">—</span>
-                            <span class="kpi-caption">Dynamic POJO Registries</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box indigo">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"></line>
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-details">
-                            <span class="kpi-label">Total Cloud Records</span>
-                            <span class="kpi-value" id="kpiTotalRecords">—</span>
-                            <span class="kpi-caption">Synchronized with Neon DB</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box emerald">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </div>
-                        <div class="kpi-details">
-                            <span class="kpi-label">System Health</span>
-                            <span class="kpi-value" id="kpiHealthStatus">100%</span>
-                            <span class="kpi-caption">REST Gateway & DB Operational</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box amber">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                        </div>
-                        <div class="kpi-details">
-                            <span class="kpi-label">Last Sync Activity</span>
-                            <span class="kpi-value" id="kpiLastSyncTime">—</span>
-                            <span class="kpi-caption" id="kpiLastSyncStatus">Checking...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Overview Charts Row -->
-                <div class="charts-grid-2col">
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title">Service Record Distribution</h3>
-                                <p class="panel-subtitle">Comparative volume of records per registered SAP service</p>
-                            </div>
-                        </div>
-                        <div class="chart-canvas-container">
-                            <canvas id="overviewServiceVolumeChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title">Billing Financial Breakdown</h3>
-                                <p class="panel-subtitle">Revenue and bill status distribution from core billing service</p>
-                            </div>
-                        </div>
-                        <div class="chart-canvas-container">
-                            <canvas id="overviewBillsDistributionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Services Grid (Cards for each registered service) -->
-                <div class="section-block">
-                    <div class="section-header">
-                        <div>
-                            <h2 class="section-title">Connected SAP Microservices</h2>
-                            <p class="section-subtitle">Click any service card to open its dedicated interactive dashboard</p>
-                        </div>
-                    </div>
-                    <div class="services-cards-grid" id="overviewServicesCards">
-                        <div class="loading-state">
-                            <div class="spinner"></div>
-                            <span>Discovering registered services...</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ═════════ 2. DEDICATED SERVICE DASHBOARD VIEW ═════════ -->
-            <section class="view-pane" id="view-service">
-                <!-- Service Dashboard Header -->
-                <div class="service-dash-header">
-                    <div class="sdh-left">
-                        <div class="service-badge-pill" id="sdhServiceBadge">SERVICE</div>
-                        <h1 class="sdh-title" id="sdhTitle">Service Dashboard</h1>
-                        <p class="sdh-desc" id="sdhDescription">Service description</p>
-                        <div class="sdh-meta">
-                            <span class="meta-item"><strong id="sdhRecordCount">0</strong> records</span>
-                            <span class="meta-item">Table: <code id="sdhTableName">—</code></span>
-                            <a href="#" target="_blank" class="meta-item link-item" id="sdhEndpointLink">API Endpoint ↗</a>
-                        </div>
-                    </div>
-
-                    <div class="sdh-actions">
-                        <button class="btn-action-outline" id="sdhSyncBtn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <polyline points="1 20 1 14 7 14"></polyline>
-                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                            </svg>
-                            <span>Sync Now</span>
-                        </button>
-
-                        <button class="btn-action-danger" id="sdhDeleteBtn" title="Remove Service & Table">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            <span>Delete Service</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Dynamic KPI Cards for this Service -->
-                <div class="kpi-grid" id="serviceKpiGrid">
-                    <!-- Populated dynamically via JS -->
-                </div>
-
-                <!-- Eye-Catchy Interactive Charts Row -->
-                <div class="charts-grid-2col" id="serviceChartsRow">
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title" id="serviceChart1Title">Status & Category Distribution</h3>
-                                <p class="panel-subtitle" id="serviceChart1Sub">Interactive breakdown by primary state</p>
-                            </div>
-                        </div>
-                        <div class="chart-canvas-container">
-                            <canvas id="serviceChart1"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title" id="serviceChart2Title">Volume & Classification Breakdown</h3>
-                                <p class="panel-subtitle" id="serviceChart2Sub">Distribution across secondary attributes</p>
-                            </div>
-                        </div>
-                        <div class="chart-canvas-container">
-                            <canvas id="serviceChart2"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Data Table Panel -->
-                <div class="table-panel">
-                    <div class="table-toolbar">
-                        <div class="search-box">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            <input type="text" id="serviceSearchInput" placeholder="Filter records in real-time...">
-                        </div>
-
-                        <div class="table-filters" id="serviceTableFilters">
-                            <!-- Filter dropdowns injected dynamically -->
-                        </div>
-
-                        <div class="toolbar-stats">
-                            <span id="serviceFilteredCount">Showing 0 records</span>
-                        </div>
-                    </div>
-
-                    <div class="table-container" id="serviceTableContainer">
-                        <div class="loading-state">
-                            <div class="spinner"></div>
-                            <span>Fetching data from database...</span>
-                        </div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="table-pagination" id="servicePagination">
-                        <div class="page-info" id="servicePageInfo">Page 1 of 1</div>
-                        <div class="page-buttons" id="servicePageButtons">
-                            <!-- Injected by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ═════════ 3. SYNC & SYSTEM HEALTH VIEW ═════════ -->
-            <section class="view-pane" id="view-sync-history">
-                <div class="panel-header-simple">
-                    <div>
-                        <h2 class="section-title">Data Ingestion & Synchronization Hub</h2>
-                        <p class="section-subtitle">Real-time sync execution logs and connection metrics for SAP endpoints</p>
-                    </div>
-                    <button class="btn-action-primary" id="btnSyncAllServices">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <polyline points="1 20 1 14 7 14"></polyline>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                        <span>Sync All Services</span>
-                    </button>
-                </div>
-
-                <div class="table-panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">Fetch Log History</h3>
-                    </div>
-                    <div class="table-container" id="syncHistoryTableContainer">
-                        <div class="loading-state">
-                            <div class="spinner"></div>
-                            <span>Loading sync activity...</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-        </div>
-    </main>
-
-    <!-- ══════════════ MODALS & DRAWERS ══════════════ -->
-
-    <!-- Add Service Modal -->
-    <div class="modal-backdrop" id="modalAddService">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div>
-                    <h3 class="modal-title">Register New SAP Service</h3>
-                    <p class="modal-subtitle">Automatically discover schema, persist in Neon DB, and generate dynamic dashboard</p>
-                </div>
-                <button class="modal-close-btn" id="closeAddServiceModal">&times;</button>
-            </div>
-
-            <div class="modal-body">
-                <!-- Preset Buttons -->
-                <div class="form-group">
-                    <label class="form-label">Quick SAP Sandbox Presets</label>
-                    <div class="preset-chips">
-                        <button type="button" class="preset-chip" data-id="products" data-name="SAP Subscription Billing - Products" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/product/v1/products">
-                            + Products
-                        </button>
-                        <button type="button" class="preset-chip" data-id="rate_plans" data-name="SAP Subscription Billing - Rate Plans" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/rate-plan/v1/rate-plans">
-                            + Rate Plans
-                        </button>
-                        <button type="button" class="preset-chip" data-id="customers" data-name="SAP Subscription Billing - Customers" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/customer/v1/customers">
-                            + Customers
-                        </button>
-                        <button type="button" class="preset-chip" data-id="usage_records" data-name="SAP Subscription Billing - Usage Records" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/usage/v1/usage-records">
-                            + Usage Records
-                        </button>
-                    </div>
-                </div>
-
-                <form id="formAddService">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="inputServiceId">Service Identifier <span class="required">*</span></label>
-                            <input type="text" id="inputServiceId" class="form-input" placeholder="e.g. products" required pattern="[A-Za-z0-9_-]+">
-                            <span class="form-hint">Used for database table name (e.g. products)</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="inputDisplayName">Display Name <span class="required">*</span></label>
-                            <input type="text" id="inputDisplayName" class="form-input" placeholder="e.g. SAP Products & Rate Plans" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="inputEndpoint">SAP Endpoint URL <span class="required">*</span></label>
-                        <input type="url" id="inputEndpoint" class="form-input" placeholder="https://sandbox.api.sap.com/..." required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="inputDescription">Description</label>
-                        <input type="text" id="inputDescription" class="form-input" placeholder="Optional brief description of this service">
-                    </div>
-
-                    <div class="form-checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="checkSyncImmediately" checked>
-                            <span>Fetch and populate data immediately upon registration</span>
-                        </label>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modal-cancel" id="cancelAddServiceBtn">Cancel</button>
-                        <button type="submit" class="btn-modal-submit" id="submitAddServiceBtn">
-                            <span>Register & Create Dashboard</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">SAP Subscription Billing</span>
+        <span class="brand-tag">Data Operations Console</span>
+      </div>
     </div>
 
-    <!-- Delete Service Confirmation Modal -->
-    <div class="modal-backdrop" id="modalDeleteConfirm">
-        <div class="modal-card modal-card-sm">
-            <div class="modal-header">
-                <div>
-                    <h3 class="modal-title danger-title">Delete SAP Service?</h3>
-                    <p class="modal-subtitle">This will unregister the service and drop its data table</p>
-                </div>
-                <button class="modal-close-btn" id="closeDeleteModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p class="delete-warning-text">
-                    Are you sure you want to delete <strong id="deleteServiceName">this service</strong>?
-                    All synchronized database records in Neon Cloud PostgreSQL will be permanently removed.
-                </p>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-cancel" id="cancelDeleteBtn">Cancel</button>
-                    <button type="button" class="btn-action-danger" id="confirmDeleteBtn">Yes, Delete Service</button>
-                </div>
-            </div>
+    <div class="sidebar-scroll">
+
+      <!-- Overview -->
+      <div class="nav-group">
+        <div class="nav-group-label">Overview</div>
+        <nav>
+          <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Dashboard</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Data Operations -->
+      <div class="nav-group">
+        <div class="nav-group-label">Data Operations</div>
+        <nav>
+          <button class="nav-item" id="nav-bills" onclick="navigate('bills')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Bills</span>
+          </button>
+          <button class="nav-item" id="nav-services" onclick="navigate('services')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg>
+            <span>Services</span>
+            <span class="nav-badge" id="sidebarServiceCount">—</span>
+          </button>
+          <button class="nav-item" id="nav-explorer" onclick="navigate('explorer')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Data Explorer</span>
+          </button>
+          <button class="nav-item" id="nav-synclogs" onclick="navigate('synclogs')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Sync Logs</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Automation -->
+      <div class="nav-group">
+        <div class="nav-group-label">
+          Automation
+          <button id="sidebarAddBtn" title="Register New Service" onclick="openAddServiceModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
         </div>
+        <nav>
+          <button class="nav-item" id="nav-setup" onclick="navigate('setup')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <span>Service Setup</span>
+          </button>
+          <button class="nav-item" id="nav-schema" onclick="navigate('schema')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            <span>Schema &amp; Models</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- System -->
+      <div class="nav-group">
+        <div class="nav-group-label">System</div>
+        <nav>
+          <button class="nav-item" id="nav-dbstatus" onclick="navigate('dbstatus')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            <span>Database Status</span>
+          </button>
+          <button class="nav-item" id="nav-apiref" onclick="navigate('apiref')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+            <span>API Reference</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Dynamic services sub-nav -->
+      <div class="nav-group" id="dynamicServicesGroup" style="display:none">
+        <div class="nav-group-label">Service Dashboards</div>
+        <nav id="dynamicServicesNav"></nav>
+      </div>
+
     </div>
 
-    <!-- Record Detail Drawer / Inspector -->
-    <div class="drawer-backdrop" id="drawerBackdrop"></div>
-    <div class="detail-drawer" id="detailDrawer">
-        <div class="drawer-header">
+    <div class="sidebar-footer">
+      <div class="db-status-chip">
+        <span class="status-dot unknown" id="dbDot"></span>
+        <div style="min-width:0">
+          <div class="db-name" id="dbNameText">Connecting…</div>
+          <div style="font-size:10px;color:var(--text-sidebar-muted);margin-top:1px" id="dbTypeText">Database</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="main-wrapper">
+
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="breadcrumbs">
+          <span class="bc-item">SAP Billing Console</span>
+          <span class="bc-sep">/</span>
+          <span class="bc-item bc-active" id="currentCrumb">Dashboard</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="conn-badge" id="connBadge">
+          <span class="status-dot unknown" id="topbarDot"></span>
+          <span id="topbarConnText">Checking…</span>
+        </div>
+        <button class="topbar-btn" id="topbarRefreshBtn" title="Refresh current view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          <span>Refresh</span>
+        </button>
+        <button class="topbar-btn primary" onclick="openAddServiceModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add Service</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── View Body ── -->
+    <div class="view-body">
+
+      <!-- ════ 1. DASHBOARD ════ -->
+      <section class="view-pane active" id="view-dashboard">
+        <div class="page-content">
+
+          <!-- Hero -->
+          <div class="overview-hero">
+            <div class="hero-left">
+              <div class="hero-eyebrow">System Overview</div>
+              <div class="hero-title">SAP Data Operations Console</div>
+              <div class="hero-desc">Monitor SAP data ingestion, service health, billing records, and synchronization activity. Automated SAP data ingestion, dynamic schema generation, and subscription billing analytics.</div>
+              <div class="hero-tags">
+                <div class="hero-tag"><strong id="heroServices">—</strong>&nbsp;Registered Services</div>
+                <div class="hero-tag"><strong id="heroRecords">—</strong>&nbsp;Stored Records</div>
+                <div class="hero-tag"><strong id="heroDb">—</strong></div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <button class="btn btn-secondary" id="dashSyncBillsBtn" onclick="syncService('bills', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Sync Bills
+              </button>
+            </div>
+          </div>
+
+          <!-- KPIs -->
+          <div class="kpi-grid" id="dashKpiGrid">
+            <!-- 4 KPI cards injected by JS -->
+            <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="kpi-body"><span class="kpi-label loading">&nbsp;</span><span class="kpi-value loading">&nbsp;</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg></div><div class="kpi-body"><span class="kpi-label loading">&nbsp;</span><span class="kpi-value loading">&nbsp;</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></div><div class="kpi-body"><span class="kpi-label loading">&nbsp;</span><span class="kpi-value loading">&nbsp;</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="kpi-body"><span class="kpi-label loading">&nbsp;</span><span class="kpi-value loading">&nbsp;</span></div></div>
+          </div>
+
+          <!-- Charts row -->
+          <div class="grid-2col">
+            <div class="panel">
+              <div class="panel-header">
+                <div><div class="panel-title">Bill Status Distribution</div><div class="panel-subtitle">Breakdown of billing records by status</div></div>
+              </div>
+              <div class="panel-body"><div class="chart-wrap"><canvas id="chartBillStatus"></canvas></div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div><div class="panel-title">Service Record Volumes</div><div class="panel-subtitle">Stored records per registered SAP service</div></div>
+              </div>
+              <div class="panel-body"><div class="chart-wrap"><canvas id="chartServiceVolume"></canvas></div></div>
+            </div>
+          </div>
+
+          <!-- Service health -->
+          <div class="panel mb-6">
+            <div class="panel-header">
+              <div><div class="panel-title">Connected SAP Services</div><div class="panel-subtitle">Registry of all dynamically registered services and their status</div></div>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('services')">View All</button>
+            </div>
+            <div id="dashServicesGrid" class="panel-body">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+          </div>
+
+          <!-- Recent sync activity -->
+          <div class="panel">
+            <div class="panel-header">
+              <div><div class="panel-title">Recent Sync Activity</div><div class="panel-subtitle">Latest synchronization operations from /api/fetch-log</div></div>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('synclogs')">View All Logs</button>
+            </div>
+            <div id="dashSyncActivity" class="panel-body">
+              <div class="spinner-center"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ════ 2. BILLS ════ -->
+      <section class="view-pane" id="view-bills">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Bills</div>
+              <div class="page-subtitle">Explore and inspect billing records ingested from SAP Subscription Billing. Filters applied server-side via <code>status</code>, <code>type</code>, <code>currency</code> parameters.</div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary" onclick="loadBills(true)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Refresh
+              </button>
+              <button class="btn btn-primary" onclick="syncService('bills', this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Sync Bills
+              </button>
+            </div>
+          </div>
+
+          <!-- Bills KPI strip -->
+          <div class="kpi-grid" id="billsKpiGrid" style="grid-template-columns: repeat(4,1fr); margin-bottom: 20px;">
+            <div class="kpi-card"><div class="kpi-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">Total Bills</span><span class="kpi-value" id="billsKpiTotal">—</span><span class="kpi-caption">All stored records</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">By Status</span><span class="kpi-value" id="billsKpiStatus">—</span><span class="kpi-caption" id="billsKpiStatusCap">Distinct statuses</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div><div class="kpi-body"><span class="kpi-label">Currencies</span><span class="kpi-value" id="billsKpiCurrencies">—</span><span class="kpi-caption" id="billsKpiCurrencyCap">In dataset</span></div></div>
+            <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">Last Sync</span><span class="kpi-value" id="billsKpiLastSync" style="font-size:16px">—</span><span class="kpi-caption" id="billsKpiLastSyncCap">—</span></div></div>
+          </div>
+
+          <!-- Bills table panel -->
+          <div class="panel">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" id="billsSearch" placeholder="Search bills…" oninput="onBillsSearch()">
+              </div>
+              <select class="filter-select" id="billsFilterStatus" onchange="loadBills()">
+                <option value="">All Statuses</option>
+              </select>
+              <select class="filter-select" id="billsFilterType" onchange="loadBills()">
+                <option value="">All Types</option>
+              </select>
+              <select class="filter-select" id="billsFilterCurrency" onchange="loadBills()">
+                <option value="">All Currencies</option>
+              </select>
+              <button class="btn btn-sm btn-ghost" onclick="clearBillsFilters()">Clear</button>
+              <span class="table-meta" id="billsTableMeta">—</span>
+            </div>
+            <div class="table-container" id="billsTableContainer">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+            <div class="pagination" id="billsPagination" style="display:none">
+              <span class="page-info-text" id="billsPageInfo"></span>
+              <div class="page-btns" id="billsPageBtns"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ 3. SERVICES ════ -->
+      <section class="view-pane" id="view-services">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Services</div>
+              <div class="page-subtitle">Dynamic SAP service registry. Each registered service has its own database table, synchronization endpoint, and data explorer.</div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary" onclick="loadServices()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Refresh
+              </button>
+              <button class="btn btn-primary" onclick="openAddServiceModal()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Register Service
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" id="servicesSearch" placeholder="Filter services…" oninput="renderServicesTable()">
+              </div>
+              <span class="table-meta" id="servicesTableMeta">—</span>
+            </div>
+            <div class="table-container" id="servicesTableContainer">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ 4. DATA EXPLORER ════ -->
+      <section class="view-pane" id="view-explorer">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Data Explorer</div>
+              <div class="page-subtitle">Inspect stored records for any registered service. Columns are discovered dynamically from the returned data schema.</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="explorer-toolbar">
+              <select class="filter-select" id="explorerService" style="min-width:220px" onchange="loadExplorerData()">
+                <option value="">Select a service…</option>
+              </select>
+              <div class="search-wrap" style="max-width:260px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" id="explorerSearch" placeholder="Search records…" oninput="renderExplorerTable()">
+              </div>
+              <div class="view-toggle">
+                <button class="view-toggle-btn active" id="explorerViewTable" onclick="setExplorerView('table')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="9" x2="9" y2="21"></line></svg>
+                  Table
+                </button>
+                <button class="view-toggle-btn" id="explorerViewJson" onclick="setExplorerView('json')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                  JSON
+                </button>
+              </div>
+              <span class="table-meta" id="explorerMeta">—</span>
+              <button class="btn btn-sm btn-secondary" onclick="loadExplorerData()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Refresh
+              </button>
+            </div>
+            <div id="explorerContent">
+              <div class="empty-state">
+                <div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                <div class="empty-state-title">Select a Service</div>
+                <div class="empty-state-desc">Choose a registered SAP service from the selector above to begin exploring its stored records.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ 5. SYNC LOGS ════ -->
+      <section class="view-pane" id="view-synclogs">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Synchronization Logs</div>
+              <div class="page-subtitle">Audit trail of all SAP data ingestion operations. Sync operations are triggered via POST to /api/sync/{service}.</div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary" onclick="loadSyncLogs()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Refresh Logs
+              </button>
+            </div>
+          </div>
+
+          <!-- Sync operations -->
+          <div class="sync-op-box">
             <div>
-                <span class="drawer-pill" id="drawerServicePill">RECORD</span>
-                <h3 class="drawer-title" id="drawerTitle">Record Details</h3>
+              <div class="sync-op-label">Synchronize Data</div>
+              <div class="sync-op-desc">Select a service and trigger a synchronization with the SAP API. Existing records are upserted.</div>
             </div>
-            <button class="drawer-close-btn" id="closeDrawerBtn">&times;</button>
+            <div class="sync-op-controls">
+              <select class="filter-select" id="syncServiceSelect" style="min-width:220px">
+                <option value="">Select service…</option>
+              </select>
+              <button class="btn btn-primary" id="syncTriggerBtn" onclick="handleSyncTrigger()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Sync Selected
+              </button>
+              <button class="btn btn-secondary" id="syncAllBtn" onclick="handleSyncAll()">Sync All</button>
+            </div>
+          </div>
+
+          <!-- Logs table -->
+          <div class="panel">
+            <div class="panel-header">
+              <div><div class="panel-title">Fetch Log History</div><div class="panel-subtitle">Last 50 sync operations from /api/fetch-log</div></div>
+            </div>
+            <div id="syncLogsContainer">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+          </div>
         </div>
-        <div class="drawer-body" id="drawerContent">
-            <!-- Formatted data injected here -->
+      </section>
+
+      <!-- ════ 6. SERVICE SETUP ════ -->
+      <section class="view-pane" id="view-setup">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Service Setup</div>
+              <div class="page-subtitle">Register a new SAP service. The backend automatically fetches data, persists records to the database, and exposes it through the service registry.</div>
+            </div>
+          </div>
+
+          <!-- Pipeline -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Automated Onboarding Pipeline</div></div>
+            <div class="pipeline">
+              <div class="pipeline-step active">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                  <div class="step-name">Configure Service</div>
+                  <div class="step-desc">Provide service ID, display name, and SAP API endpoint URL.</div>
+                  <div class="step-out">Output: Validated service descriptor</div>
+                </div>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                  <div class="step-name">Fetch SAP Data</div>
+                  <div class="step-desc">Backend fetches a live response from the SAP API endpoint using API-key authentication.</div>
+                  <div class="step-out">Output: Raw JSON payload</div>
+                </div>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                  <div class="step-name">Schema &amp; Table</div>
+                  <div class="step-desc">Dynamic DDL is generated from the response structure. Table is created in the active database.</div>
+                  <div class="step-out">Output: Typed relational table</div>
+                </div>
+              </div>
+              <div class="pipeline-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                  <div class="step-name">Register &amp; Persist</div>
+                  <div class="step-desc">Service is added to the dynamic registry and records are upserted. Dashboard becomes available immediately.</div>
+                  <div class="step-out">Output: Registered service + stored records</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick registration form -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Register New Service via API</div><div class="panel-subtitle">POST /api/services — Backend registers, fetches, and persists data in one step</div></div>
+            <div class="panel-body">
+              <div class="info-box blue mb-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <div class="info-box-content">The backend supports <strong>POST /api/services</strong> to register a service and optionally fetch its initial data. Fill the form below or use the quick presets.</div>
+              </div>
+              <div class="preset-chips" style="margin-bottom:16px">
+                <button type="button" class="preset-chip" data-id="products" data-name="SAP Subscription Billing - Products" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/product/v1/products" data-desc="Product catalog from SAP Subscription Billing API" onclick="fillSetupPreset(this)">+ Products</button>
+                <button type="button" class="preset-chip" data-id="rate_plans" data-name="SAP Subscription Billing - Rate Plans" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/rate-plan/v1/rate-plans" data-desc="Rate plan configurations" onclick="fillSetupPreset(this)">+ Rate Plans</button>
+                <button type="button" class="preset-chip" data-id="customers" data-name="SAP Subscription Billing - Customers" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/customer/v1/customers" data-desc="Customer master data" onclick="fillSetupPreset(this)">+ Customers</button>
+                <button type="button" class="preset-chip" data-id="usage_records" data-name="SAP Subscription Billing - Usage Records" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/usage/v1/usage-records" data-desc="Usage records and metering data" onclick="fillSetupPreset(this)">+ Usage Records</button>
+                <button type="button" class="preset-chip" data-id="forecast" data-name="SAP Subscription Billing - Forecast" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/forecast/v1/forecasts" data-desc="Billing forecast data" onclick="fillSetupPreset(this)">+ Forecast</button>
+              </div>
+              <form id="setupForm" onsubmit="handleSetupSubmit(event)">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="setupServiceId">Service ID <span class="req">*</span></label>
+                    <input type="text" id="setupServiceId" class="form-input" placeholder="e.g. products" required pattern="[A-Za-z0-9_-]+" autocomplete="off">
+                    <span class="form-hint">Alphanumeric + underscores. Used as database table name.</span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="setupDisplayName">Display Name <span class="req">*</span></label>
+                    <input type="text" id="setupDisplayName" class="form-input" placeholder="e.g. SAP Products" required autocomplete="off">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setupEndpoint">SAP Endpoint URL <span class="req">*</span></label>
+                  <input type="url" id="setupEndpoint" class="form-input" placeholder="https://sandbox.api.sap.com/subscriptionbilling/..." required autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setupDescription">Description</label>
+                  <input type="text" id="setupDescription" class="form-input" placeholder="Optional description of this service">
+                </div>
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="setupSyncNow" checked>
+                    <span>Fetch and store data immediately after registration</span>
+                  </label>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px">
+                  <button type="submit" class="btn btn-primary" id="setupSubmitBtn">Register Service</button>
+                  <button type="button" class="btn btn-secondary" onclick="clearSetupForm()">Clear</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- CLI fallback -->
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">CLI Setup Command (Advanced)</div><div class="panel-subtitle">For generating POJOs and full automation pipeline — run in the project directory</div></div>
+            <div class="panel-body">
+              <div class="info-box amber mb-4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <div class="info-box-content">The full automation pipeline (OpenAPI inference + POJO generation) requires running <strong>auto_service_setup.bat</strong> in the project directory. This is a server-side script and cannot be executed from the browser.</div>
+              </div>
+              <div style="position:relative">
+                <div class="cmd-preview" id="cmdPreview">
+                  <span class="cmd-prompt">$&nbsp;</span><span class="cmd-exe">auto_service_setup.bat</span> <span class="cmd-arg" id="cmdArgId">&lt;service_name&gt;</span> <span class="cmd-val" id="cmdArgUrl">&lt;service_url&gt;</span>
+                </div>
+                <button class="copy-cmd-btn" id="copyCmdBtn" onclick="copyCommand()">Copy</button>
+              </div>
+              <div class="form-hint" style="margin-top:8px">Fill the form above to see the generated command. Execute this in the project root directory after the Java server is running.</div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- ════ 7. SCHEMA & MODELS ════ -->
+      <section class="view-pane" id="view-schema">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Schema &amp; Models</div>
+              <div class="page-subtitle">Information about the generated OpenAPI 3.0 specifications and Java POJO models associated with registered services.</div>
+            </div>
+          </div>
+
+          <div class="info-box blue mb-6">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <div class="info-box-content">OpenAPI specifications and POJO source files are generated on disk by the automation pipeline. They are not served via an API endpoint. This page documents the schema structure and pipeline artifacts.</div>
+          </div>
+
+          <!-- Service model info from registry -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Registered Service Models</div><div class="panel-subtitle">POJO class and endpoint information from the service registry (/api/services)</div></div>
+            <div id="schemaServicesContainer">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+          </div>
+
+          <!-- Bills schema -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Bills Table Schema</div><div class="panel-subtitle">Strongly-typed relational columns defined in DatabaseManager.java</div></div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Column</th><th>SQL Type</th><th>Description</th></tr></thead>
+                <tbody id="billsSchemaBody">
+                  <tr><td class="mono">id</td><td class="mono">VARCHAR(255)</td><td class="muted">Primary key — Bill identifier from SAP</td></tr>
+                  <tr><td class="mono">document_number</td><td class="mono">BIGINT</td><td class="muted">SAP document number</td></tr>
+                  <tr><td class="mono">billing_type</td><td class="mono">VARCHAR(50)</td><td class="muted">Billing type classification</td></tr>
+                  <tr><td class="mono">bill_status</td><td class="mono">VARCHAR(50)</td><td class="muted">Current status (OPEN, CLOSED, etc.)</td></tr>
+                  <tr><td class="mono">transfer_status</td><td class="mono">VARCHAR(50)</td><td class="muted">Transfer/posting status</td></tr>
+                  <tr><td class="mono">currency</td><td class="mono">VARCHAR(10)</td><td class="muted">Currency code (ISO 4217)</td></tr>
+                  <tr><td class="mono">due_date</td><td class="mono">DATE</td><td class="muted">Payment due date</td></tr>
+                  <tr><td class="mono">billing_date</td><td class="mono">DATE</td><td class="muted">Date of billing</td></tr>
+                  <tr><td class="mono">billing_profile_id</td><td class="mono">VARCHAR(255)</td><td class="muted">Associated billing profile</td></tr>
+                  <tr><td class="mono">customer_id</td><td class="mono">VARCHAR(255)</td><td class="muted">Customer identifier</td></tr>
+                  <tr><td class="mono">customer_type</td><td class="mono">VARCHAR(50)</td><td class="muted">Customer classification</td></tr>
+                  <tr><td class="mono">customer_country</td><td class="mono">VARCHAR(100)</td><td class="muted">Customer country</td></tr>
+                  <tr><td class="mono">market_id</td><td class="mono">VARCHAR(255)</td><td class="muted">Market segment identifier</td></tr>
+                  <tr><td class="mono">net_amount</td><td class="mono">DECIMAL(18,2)</td><td class="muted">Net monetary amount</td></tr>
+                  <tr><td class="mono">net_currency</td><td class="mono">VARCHAR(10)</td><td class="muted">Net amount currency</td></tr>
+                  <tr><td class="mono">gross_amount</td><td class="mono">DECIMAL(18,2)</td><td class="muted">Gross monetary amount</td></tr>
+                  <tr><td class="mono">gross_currency</td><td class="mono">VARCHAR(10)</td><td class="muted">Gross amount currency</td></tr>
+                  <tr><td class="mono">raw_json</td><td class="mono">TEXT</td><td class="muted">Full original SAP API payload</td></tr>
+                  <tr><td class="mono">fetched_at</td><td class="mono">TIMESTAMP</td><td class="muted">When record was first ingested</td></tr>
+                  <tr><td class="mono">updated_at</td><td class="mono">TIMESTAMP</td><td class="muted">When record was last updated</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pipeline description -->
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Auto-POJO Generation Pipeline</div></div>
+            <div class="panel-body">
+              <div class="section-divider"><div class="section-divider-label">How it works</div><div class="section-divider-line"></div></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+                <div style="padding:14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface-2)">
+                  <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">OpenAPI 3.0 Inference</div>
+                  <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">The system fetches a live SAP API response and uses <code>SapAutoServiceManager.java</code> to infer an OpenAPI 3.0 specification from the JSON structure. Generated specs are written to the <code>specs/</code> directory.</div>
+                </div>
+                <div style="padding:14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface-2)">
+                  <div style="font-size:12px;font-weight:700;color:var(--success);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">POJO Generation</div>
+                  <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">OpenAPI Generator produces strongly-typed Java POJO models. Model classes are placed in service-specific packages under <code>src/main/java/projectsap/sap/</code>.</div>
+                </div>
+                <div style="padding:14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface-2)">
+                  <div style="font-size:12px;font-weight:700;color:var(--warning);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">Dynamic DDL</div>
+                  <div style="font-size:13px;color:var(--text-secondary);line-height:1.5"><code>DatabaseManager.ensureServiceTable()</code> introspects the JSON structure and generates CREATE TABLE DDL with appropriate SQL types. A <code>raw_json</code> column always retains the full payload.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ════ 8. DATABASE STATUS ════ -->
+      <section class="view-pane" id="view-dbstatus">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">Database Status</div>
+              <div class="page-subtitle">Active database engine, connection architecture, and table schema reference. Actual engine determined by /api/stats response.</div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary" onclick="loadDbStatus()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                Check Status
+              </button>
+            </div>
+          </div>
+
+          <!-- Active engine -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Active Database Engine</div></div>
+            <div class="panel-body">
+              <div id="dbActiveInfo" class="spinner-center"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Architecture diagram -->
+          <div class="panel mb-6">
+            <div class="panel-header"><div class="panel-title">Connection Architecture</div><div class="panel-subtitle">The system attempts PostgreSQL first, falls back to H2 Embedded automatically</div></div>
+            <div class="panel-body">
+              <div class="db-arch-grid">
+                <div class="db-node">
+                  <div class="db-node-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></div>
+                  <div class="db-node-name">PostgreSQL</div>
+                  <div class="db-node-type">Primary Database (Preferred)</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Full SQL feature set</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Cloud-hosted (Neon) or local</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Auto-creates database if missing</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> SSL required for cloud hosts</div>
+                </div>
+                <div class="db-arrow">→</div>
+                <div class="db-node">
+                  <div class="db-node-icon amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
+                  <div class="db-node-name">H2 Embedded</div>
+                  <div class="db-node-type">Fallback Database</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> No installation required</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> PostgreSQL compatibility mode</div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Persisted to <code>./data/sap_bills_db</code></div>
+                  <div class="db-node-prop"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Used when PostgreSQL unavailable</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column design -->
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Database Table Design</div><div class="panel-subtitle">All service tables follow this schema pattern</div></div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Column Pattern</th><th>Type</th><th>Purpose</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">id</td><td><span class="badge badge-blue">VARCHAR PK</span></td><td class="muted">Primary key from SAP record identifier</td></tr>
+                  <tr><td class="mono">&lt;typed fields&gt;</td><td><span class="badge badge-neutral">Typed</span></td><td class="muted">Strongly-typed scalar columns inferred from JSON structure</td></tr>
+                  <tr><td class="mono">raw_json</td><td><span class="badge badge-neutral">TEXT / CLOB</span></td><td class="muted">Complete original SAP payload preserved for full fidelity</td></tr>
+                  <tr><td class="mono">fetched_at</td><td><span class="badge badge-neutral">TIMESTAMP</span></td><td class="muted">When this record was first ingested from SAP</td></tr>
+                  <tr><td class="mono">updated_at</td><td><span class="badge badge-neutral">TIMESTAMP</span></td><td class="muted">When this record was last synchronized/updated</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ════ 9. API REFERENCE ════ -->
+      <section class="view-pane" id="view-apiref">
+        <div class="page-content">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-title">API Reference</div>
+              <div class="page-subtitle">REST endpoints implemented in BillServer.java. Server starts on port 8080 with automatic fallback to 8085, 8081, 8082, 8888.</div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/bills</span>
+              <span class="endpoint-summary">List stored bills with optional filters</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Query Parameters</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">status</span><span class="param-type">string</span><span class="param-desc">Filter by bill_status column value (e.g. <code>OPEN</code>, <code>CLOSED</code>)</span></div>
+              <div class="param-row"><span class="param-name">type</span><span class="param-type">string</span><span class="param-desc">Filter by billing_type column value</span></div>
+              <div class="param-row"><span class="param-name">currency</span><span class="param-type">string</span><span class="param-desc">Filter by currency column value (e.g. <code>USD</code>, <code>EUR</code>)</span></div>
+              <div class="section-divider" style="margin-top:12px"><div class="section-divider-label">Response</div><div class="section-divider-line"></div></div>
+              <div class="json-pre">[{ "id": "...", "billStatus": "OPEN", "currency": "USD", ... }]</div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/bills/{id}</span>
+              <span class="endpoint-summary">Fetch a single bill by ID</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Path Parameters</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">id</span><span class="param-type">string</span><span class="param-desc">SAP bill identifier (URL-encoded if necessary)</span></div>
+              <div class="section-divider" style="margin-top:12px"><div class="section-divider-label">Response</div><div class="section-divider-line"></div></div>
+              <div class="json-pre">{ "id": "BILL-001", "billStatus": "OPEN", ... }
+// 404 if not found: { "error": "Bill not found with ID: ..." }</div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/stats</span>
+              <span class="endpoint-summary">Aggregated billing statistics</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Response Fields</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">dbEngine</span><span class="param-type">string</span><span class="param-desc">Active database engine name (PostgreSQL or H2 Embedded)</span></div>
+              <div class="param-row"><span class="param-name">totalBills</span><span class="param-type">number</span><span class="param-desc">Total count of stored bill records</span></div>
+              <div class="param-row"><span class="param-name">byStatus</span><span class="param-type">object</span><span class="param-desc">Count per bill status value { "OPEN": 10, ... }</span></div>
+              <div class="param-row"><span class="param-name">byType</span><span class="param-type">object</span><span class="param-desc">Count per billing type</span></div>
+              <div class="param-row"><span class="param-name">byCurrency</span><span class="param-type">object</span><span class="param-desc">Count per currency code</span></div>
+              <div class="param-row"><span class="param-name">totalNetAmount</span><span class="param-type">decimal</span><span class="param-desc">Sum of net_amount across all bills</span></div>
+              <div class="param-row"><span class="param-name">totalGrossAmount</span><span class="param-type">decimal</span><span class="param-desc">Sum of gross_amount across all bills</span></div>
+              <div class="param-row"><span class="param-name">currencies</span><span class="param-type">string[]</span><span class="param-desc">Distinct currency codes in dataset</span></div>
+              <div class="param-row"><span class="param-name">lastSync</span><span class="param-type">object|null</span><span class="param-desc">Last fetch_log entry: { at, count, status, message }</span></div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/services</span>
+              <span class="endpoint-summary">List all registered services</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Response Fields (per service)</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">serviceId</span><span class="param-type">string</span><span class="param-desc">Unique service identifier (lowercase, alphanumeric + underscores)</span></div>
+              <div class="param-row"><span class="param-name">displayName</span><span class="param-type">string</span><span class="param-desc">Human-readable service name</span></div>
+              <div class="param-row"><span class="param-name">defaultEndpoint</span><span class="param-type">string</span><span class="param-desc">SAP API endpoint URL</span></div>
+              <div class="param-row"><span class="param-name">description</span><span class="param-type">string</span><span class="param-desc">Service description</span></div>
+              <div class="param-row"><span class="param-name">tableName</span><span class="param-type">string</span><span class="param-desc">Database table name for this service</span></div>
+              <div class="param-row"><span class="param-name">recordCount</span><span class="param-type">number</span><span class="param-desc">Current count of stored records</span></div>
+              <div class="param-row"><span class="param-name">pojoClass</span><span class="param-type">string</span><span class="param-desc">Fully qualified Java POJO class name</span></div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-post">POST</span>
+              <span class="endpoint-path">/api/services</span>
+              <span class="endpoint-summary">Register a new service</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Request Body (JSON)</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">serviceId</span><span class="param-type">string *</span><span class="param-desc">Service identifier (sanitized to lowercase alphanumeric + underscores)</span></div>
+              <div class="param-row"><span class="param-name">displayName</span><span class="param-type">string</span><span class="param-desc">Human-readable name (defaults to "SAP - &lt;serviceId&gt;")</span></div>
+              <div class="param-row"><span class="param-name">endpoint</span><span class="param-type">string *</span><span class="param-desc">SAP API endpoint URL (also accepted as <code>serviceUrl</code>)</span></div>
+              <div class="param-row"><span class="param-name">description</span><span class="param-type">string</span><span class="param-desc">Optional description</span></div>
+              <div class="param-row"><span class="param-name">syncNow</span><span class="param-type">boolean</span><span class="param-desc">Whether to fetch and store data immediately (default: true)</span></div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-delete">DEL</span>
+              <span class="endpoint-path">/api/services/{serviceId}</span>
+              <span class="endpoint-summary">Unregister service and drop its table</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Notes</div><div class="section-divider-line"></div></div>
+              <div class="info-box amber mb-0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><div class="info-box-content">The core <strong>bills</strong> service cannot be deleted. This operation drops the database table and removes the service from the runtime registry.</div></div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/data/{service}</span>
+              <span class="endpoint-summary">Get stored records for any service</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Notes</div><div class="section-divider-line"></div></div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">Returns up to 500 records ordered by <code>fetched_at DESC</code> from the service's table. Each record is the <code>raw_json</code> field restored to its original structure. Returns <code>[]</code> if the table does not exist.</div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-get">GET</span>
+              <span class="endpoint-path">/api/fetch-log</span>
+              <span class="endpoint-summary">Synchronization audit log (last 50 entries)</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Response Fields (per entry)</div><div class="section-divider-line"></div></div>
+              <div class="param-row"><span class="param-name">id</span><span class="param-type">number</span><span class="param-desc">Auto-incremented log entry ID</span></div>
+              <div class="param-row"><span class="param-name">fetchedAt</span><span class="param-type">string</span><span class="param-desc">Timestamp of the sync operation</span></div>
+              <div class="param-row"><span class="param-name">billCount</span><span class="param-type">number</span><span class="param-desc">Number of records processed in this operation</span></div>
+              <div class="param-row"><span class="param-name">status</span><span class="param-type">string</span><span class="param-desc">SUCCESS or ERROR</span></div>
+              <div class="param-row"><span class="param-name">message</span><span class="param-type">string</span><span class="param-desc">Human-readable operation summary or error message</span></div>
+            </div>
+          </div>
+
+          <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggleEndpoint(this)">
+              <span class="method-badge method-post">POST</span>
+              <span class="endpoint-path">/api/sync/{service}</span>
+              <span class="endpoint-summary">Trigger synchronization for a service</span>
+            </div>
+            <div class="endpoint-body" style="display:none">
+              <div class="section-divider"><div class="section-divider-label">Notes</div><div class="section-divider-line"></div></div>
+              <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">For the <code>bills</code> service, fetches from <code>SapApiClient.fetchBillsFromSAP()</code>. For other registered services, fetches from <code>desc.getDefaultEndpoint()</code>. Also accepts <code>?service=&lt;name&gt;</code> query parameter if no path segment is provided. Returns <code>{ success, service, table, message, count }</code>.</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ════ DYNAMIC SERVICE DASHBOARD ════ -->
+      <section class="view-pane" id="view-service-dashboard">
+        <div class="service-view-header" id="svcDashHeader">
+          <div class="page-header" style="padding:20px 28px 0;margin-bottom:0">
+            <div class="page-header-left">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span class="badge badge-blue" id="svcDashBadge">SERVICE</span>
+              </div>
+              <div class="page-title" id="svcDashTitle">Service Dashboard</div>
+              <div class="page-subtitle" id="svcDashDesc"></div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-secondary" id="svcDashSyncBtn" onclick="handleSvcSync()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Sync Now
+              </button>
+              <button class="btn btn-danger" id="svcDashDeleteBtn" onclick="handleSvcDelete()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete
+              </button>
+            </div>
+          </div>
+          <div class="meta-row" style="padding:0 28px 16px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
+            <span>Table: <code id="svcDashTable">—</code></span>
+            <span><a href="#" id="svcDashEndpointLink" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">API Endpoint ↗</a></span>
+            <span id="svcDashRecords" style="font-weight:600;color:var(--text-primary)">0 records</span>
+          </div>
+        </div>
+
+        <div class="page-content" style="padding-top:24px">
+          <!-- KPIs -->
+          <div class="kpi-grid" id="svcKpiGrid" style="margin-bottom:20px"></div>
+
+          <!-- Charts -->
+          <div class="grid-2col" id="svcChartsRow">
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title" id="svcChart1Title">Status Distribution</div></div>
+              <div class="panel-body"><div class="chart-wrap"><canvas id="svcChart1"></canvas></div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title" id="svcChart2Title">Secondary Breakdown</div></div>
+              <div class="panel-body"><div class="chart-wrap"><canvas id="svcChart2"></canvas></div></div>
+            </div>
+          </div>
+
+          <!-- Data table -->
+          <div class="panel">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" id="svcSearch" placeholder="Filter records…" oninput="renderSvcTable()">
+              </div>
+              <span class="table-meta" id="svcTableMeta">—</span>
+            </div>
+            <div class="table-container" id="svcTableContainer">
+              <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
+            </div>
+            <div class="pagination" id="svcPagination">
+              <span class="page-info-text" id="svcPageInfo"></span>
+              <div class="page-btns" id="svcPageBtns"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
+  </main>
 
-    <!-- Notification Toast System -->
-    <div class="toast-container" id="toastContainer"></div>
+  <!-- ══════════════ MODALS ══════════════ -->
 
-    <!-- Application Script -->
-    <script src="/frontend/app.js"></script>
+  <!-- Add Service Modal -->
+  <div class="modal-backdrop" id="modalAddService">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Register New SAP Service</div>
+          <div class="modal-subtitle">Automatically discover schema, persist records, and generate dashboard</div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalAddService')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preset-chips" style="margin-bottom:16px">
+          <button type="button" class="preset-chip" data-id="products" data-name="SAP Subscription Billing - Products" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/product/v1/products" data-desc="Product catalog from SAP Subscription Billing API" onclick="fillModalPreset(this)">+ Products</button>
+          <button type="button" class="preset-chip" data-id="rate_plans" data-name="SAP Subscription Billing - Rate Plans" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/rate-plan/v1/rate-plans" data-desc="Rate plan configurations" onclick="fillModalPreset(this)">+ Rate Plans</button>
+          <button type="button" class="preset-chip" data-id="customers" data-name="SAP Subscription Billing - Customers" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/customer/v1/customers" data-desc="Customer master data" onclick="fillModalPreset(this)">+ Customers</button>
+          <button type="button" class="preset-chip" data-id="usage_records" data-name="SAP Subscription Billing - Usage Records" data-url="https://sandbox.api.sap.com/subscriptionbilling/api/usage/v1/usage-records" data-desc="Usage records and metering data" onclick="fillModalPreset(this)">+ Usage Records</button>
+        </div>
+        <form id="addServiceForm" onsubmit="handleAddServiceSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="modalServiceId">Service ID <span class="req">*</span></label>
+              <input type="text" id="modalServiceId" class="form-input" placeholder="e.g. products" required pattern="[A-Za-z0-9_-]+" autocomplete="off">
+              <span class="form-hint">Used as database table name</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modalDisplayName">Display Name <span class="req">*</span></label>
+              <input type="text" id="modalDisplayName" class="form-input" placeholder="e.g. SAP Products" required autocomplete="off">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modalEndpoint">SAP Endpoint URL <span class="req">*</span></label>
+            <input type="url" id="modalEndpoint" class="form-input" placeholder="https://sandbox.api.sap.com/..." required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modalDescription">Description</label>
+            <input type="text" id="modalDescription" class="form-input" placeholder="Optional description">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="checkbox-label">
+              <input type="checkbox" id="modalSyncNow" checked>
+              <span>Fetch and store data immediately after registration</span>
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalAddService')">Cancel</button>
+        <button type="submit" form="addServiceForm" class="btn btn-primary" id="addServiceSubmitBtn">Register Service</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" id="modalDeleteConfirm">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title danger-text">Delete Service?</div>
+          <div class="modal-subtitle">This cannot be undone</div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modalDeleteConfirm')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-warning">
+          This will permanently unregister <strong id="deleteServiceNameLabel">this service</strong> and drop its database table. All synchronized records will be lost.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalDeleteConfirm')">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="handleConfirmDelete()">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Drawer -->
+  <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+  <div class="detail-drawer" id="detailDrawer">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title" id="drawerTitle">Record Details</div>
+        <div class="drawer-subtitle" id="drawerSubtitle"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/frontend/app.js"></script>
 </body>
 </html>
