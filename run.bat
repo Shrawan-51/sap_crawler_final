@@ -52,17 +52,21 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+set "TARGET_PORT=8080"
+netstat -ano | findstr "0.0.0.0:8080" >nul 2>&1
+if %errorlevel% equ 0 set "TARGET_PORT=8085"
+
 echo.
 echo [2/2] Starting SAP Bill Dashboard Server...
 echo ===================================================
 echo   Connecting to PostgreSQL (db: %DB_NAME%, user: %DB_USER%)
-echo   Opening browser at http://localhost:8080 ...
+echo   Opening browser at http://localhost:%TARGET_PORT% ...
 echo   Press Ctrl+C to stop server.
 echo ===================================================
 echo.
 
 :: Open browser after 3 seconds
-start /b cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:8080"
+start /b cmd /c "timeout /t 3 /nobreak >nul && start http://localhost:%TARGET_PORT%"
 
 :: Launch Maven Server with PostgreSQL parameters
 call "%MVN_CMD%" exec:java "-Ddb.host=%DB_HOST%" "-Ddb.port=%DB_PORT%" "-Ddb.user=%DB_USER%" "-Ddb.pass=%DB_PASS%" "-Ddb.name=%DB_NAME%"
