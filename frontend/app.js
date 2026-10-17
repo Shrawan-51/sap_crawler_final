@@ -170,6 +170,282 @@ function closeDrawer() {
   document.getElementById('detailDrawer')?.classList.remove('open');
 }
 
+// ── Structured Detail Drawer Renderer ───────────────────────────
+function isIdOrCode(k) {
+  const lo = String(k).toLowerCase();
+  return lo === 'id' || lo.endsWith('id') || lo.endsWith('uuid') || lo.includes('token') || lo.includes('documentnumber');
+}
+
+function renderPrimitiveVal(v, k) {
+  if (v == null) return '<span class="text-muted">—</span>';
+  if (typeof v === 'boolean') {
+    return `<span class="badge ${v ? 'badge-success' : 'badge-neutral'}">${v ? 'TRUE' : 'FALSE'}</span>`;
+  }
+  const str = String(v);
+  const lo = String(k).toLowerCase();
+  if (lo.includes('status')) {
+    return `<span class="badge ${statusBadgeClass(str)}">${escHtml(str)}</span>`;
+  }
+  if (lo === 'currency') {
+    return `<span class="badge badge-neutral mono">${escHtml(str)}</span>`;
+  }
+  if (lo.includes('amount') || lo.includes('price')) {
+    const num = Number(v);
+    if (!isNaN(num)) return `<strong>${num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>`;
+  }
+  if ((lo.includes('at') || lo.includes('date') || lo.includes('from') || lo.includes('until')) && str.includes('T')) {
+    return `<span class="mono" title="${escHtml(str)}">${escHtml(fmtTimestamp(str))}</span>`;
+  }
+  return escHtml(str);
+}
+
+function formatSubTableCell(val, col) {
+  if (val == null) return '<span class="text-muted">—</span>';
+  if (typeof val === 'object') {
+    if ('amount' in val) {
+      return `<strong>${Number(val.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> ${escHtml(val.currency || '')}`;
+    }
+    if ('value' in val && 'unit' in val) {
+      return `<strong>${val.value}</strong> <span class="text-muted">${escHtml(val.unit)}</span>`;
+    }
+    if ('start' in val && 'end' in val) {
+      const s = String(val.start).slice(0, 10);
+      const e = String(val.end).slice(0, 10);
+      return `<span class="mono" style="font-size:10.5px;">${s} → ${e}</span>`;
+    }
+    if (Array.isArray(val)) {
+      if (!val.length) return '<span class="text-muted">—</span>';
+      return val.map(p => {
+        if (p && p.conditionType && p.conditionValue) {
+          const cv = p.conditionValue;
+          const amtStr = cv.amount ? `(${cv.amount} ${cv.currency || ''})` : '';
+          return `<span class="badge badge-neutral" style="font-size:10px;">${escHtml(p.conditionType)} ${amtStr}</span>`;
+        }
+        return `<span class="badge badge-neutral" style="font-size:10px;">${escHtml(JSON.stringify(p).slice(0, 25))}</span>`;
+      }).join(' ');
+    }
+    return `<code style="font-size:10px;">${escHtml(JSON.stringify(val).slice(0, 40))}</code>`;
+  }
+  if (typeof val === 'boolean') {
+    return `<span class="badge ${val ? 'badge-success' : 'badge-neutral'}" style="font-size:10px;">${val ? 'TRUE' : 'FALSE'}</span>`;
+  }
+  if (String(col).toLowerCase().includes('type')) {
+    return `<span class="badge badge-blue" style="font-size:10px;">${escHtml(String(val))}</span>`;
+  }
+  if (String(col).toLowerCase().includes('due') || String(col).toLowerCase().includes('date')) {
+    return `<span class="mono" style="font-size:11px;">${escHtml(String(val).slice(0, 10))}</span>`;
+  }
+  return escHtml(String(val));
+}
+
+function renderSubArrayTable(key, arr) {
+  if (!arr.length) return '';
+  const first = arr[0];
+  if (typeof first !== 'object' || first === null) {
+    return `<div style="margin-top:8px;">
+      <span style="font-size:11px; font-weight:600; color:var(--text-secondary);">${escHtml(fmtColHeader(key))}:</span>
+      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+        ${arr.map(v => `<span class="badge badge-neutral">${escHtml(String(v))}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  const allKeys = [...new Set(arr.flatMap(o => Object.keys(o)))];
+  const preferredCols = ['metricId', 'billingType', 'monetaryAmount', 'quantity', 'dueAt', 'ratingPeriod', 'ratingType', 'pricingElements'];
+  const cols = [...preferredCols.filter(k => allKeys.includes(k)), ...allKeys.filter(k => !preferredCols.includes(k))].slice(0, 6);
+
+  return `<div style="margin-top:10px;">
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+      <span>${escHtml(fmtColHeader(key))}</span>
+      <span class="badge badge-blue" style="font-size:10px;">${arr.length} ${arr.length === 1 ? 'item' : 'items'}</span>
+    </div>
+    <div style="overflow-x:auto; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--bg-surface);">
+      <table class="data-table" style="font-size:11.5px; width:100%;">
+        <thead>
+          <tr>
+            ${cols.map(c => `<th style="padding:6px 10px; font-size:10px;">${escHtml(fmtColHeader(c))}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${arr.map(row => `
+            <tr>
+              ${cols.map(c => `<td style="padding:6px 10px;">${formatSubTableCell(row[c], c)}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderNestedObjectItem(item, idx, parentKey) {
+  if (!item || typeof item !== 'object') {
+    return `<div class="nested-item-card"><span class="text-muted">${escHtml(String(item))}</span></div>`;
+  }
+
+  const entries = Object.entries(item);
+  const primitives = entries.filter(([, v]) => typeof v !== 'object' || v === null);
+  const subArrays = entries.filter(([, v]) => Array.isArray(v) && v.length > 0);
+  const subObjects = entries.filter(([, v]) => typeof v === 'object' && v !== null && !Array.isArray(v));
+
+  const itemTitle = item.forecastTypeId || item.forecastId || item.itemId || item.metricId || item.id || item.code || item.name || `#${idx + 1}`;
+
+  return `<div class="nested-item-card">
+    <div class="nested-item-card-header">
+      <span class="nested-item-badge">#${idx + 1}</span>
+      <span class="nested-item-title">${escHtml(itemTitle)}</span>
+    </div>
+    <div class="nested-item-card-content">
+      ${primitives.length ? `
+        <div class="fields-list" style="margin-bottom:${subArrays.length || subObjects.length ? '10px' : '0'};">
+          ${primitives.map(([k, v]) => `
+            <div class="field-row">
+              <span class="field-key" style="min-width:120px; max-width:120px;" title="${escHtml(k)}">${escHtml(fmtColHeader(k))}</span>
+              <span class="field-val ${isIdOrCode(k) ? 'mono' : ''}">${renderPrimitiveVal(v, k)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${subObjects.map(([k, v]) => `
+        <div style="background:var(--bg-surface-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:8px 10px; margin-top:8px;">
+          <div style="font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:4px;">${escHtml(fmtColHeader(k))}</div>
+          <div class="fields-list">
+            ${Object.entries(v).map(([subK, subV]) => `
+              <div class="field-row">
+                <span class="field-key" style="min-width:110px; max-width:110px;">${escHtml(fmtColHeader(subK))}</span>
+                <span class="field-val ${isIdOrCode(subK) ? 'mono' : ''}">${renderPrimitiveVal(subV, subK)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+
+      ${subArrays.map(([k, arr]) => renderSubArrayTable(k, arr)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderComplexCard(key, val) {
+  const isArr = Array.isArray(val);
+  const label = fmtColHeader(key);
+
+  if (isArr) {
+    if (val.length === 0) {
+      return `<div class="nested-card">
+        <div class="nested-card-header">
+          <span class="nested-card-title">${escHtml(label)}</span>
+          <span class="badge badge-neutral">0 items</span>
+        </div>
+        <div style="padding:10px 14px; font-size:12px;" class="text-muted">Empty array []</div>
+      </div>`;
+    }
+
+    if (typeof val[0] !== 'object' || val[0] === null) {
+      return `<div class="nested-card">
+        <div class="nested-card-header">
+          <span class="nested-card-title">${escHtml(label)}</span>
+          <span class="badge badge-blue">${val.length} items</span>
+        </div>
+        <div style="padding:10px 14px; display:flex; flex-wrap:wrap; gap:6px;">
+          ${val.map(item => `<span class="badge badge-neutral">${escHtml(String(item))}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    return `<div class="nested-card">
+      <div class="nested-card-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="nested-card-title">${escHtml(label)}</span>
+          <span class="badge badge-blue">${val.length} ${val.length === 1 ? 'record' : 'records'}</span>
+        </div>
+      </div>
+      <div style="padding:12px; display:flex; flex-direction:column; gap:10px;">
+        ${val.map((item, idx) => renderNestedObjectItem(item, idx, key)).join('')}
+      </div>
+    </div>`;
+  }
+
+  const objEntries = Object.entries(val);
+  if (!objEntries.length) {
+    return `<div class="nested-card">
+      <div class="nested-card-header">
+        <span class="nested-card-title">${escHtml(label)}</span>
+        <span class="badge badge-neutral">Empty</span>
+      </div>
+      <div style="padding:10px 14px; font-size:12px;" class="text-muted">Empty object {}</div>
+    </div>`;
+  }
+
+  return `<div class="nested-card">
+    <div class="nested-card-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="nested-card-title">${escHtml(label)}</span>
+        <span class="badge badge-neutral">Object</span>
+      </div>
+    </div>
+    <div style="padding:10px 14px;">
+      <div class="fields-list">
+        ${objEntries.map(([k, v]) => `
+          <div class="field-row">
+            <span class="field-key" title="${escHtml(k)}">${escHtml(fmtColHeader(k))}</span>
+            <span class="field-val ${isIdOrCode(k) ? 'mono' : ''}">${typeof v === 'object' && v !== null ? `<code style="font-size:11px">${escHtml(JSON.stringify(v))}</code>` : renderPrimitiveVal(v, k)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildRecordDetailHtml(record, contextTitle = 'Record Detail') {
+  if (!record || typeof record !== 'object') {
+    return `<div class="empty-state"><div class="empty-state-title">No data</div></div>`;
+  }
+
+  const entries = Object.entries(record).filter(([k]) => k !== 'rawJson' && k !== 'raw_json');
+  const primitives = entries.filter(([, v]) => typeof v !== 'object' || v === null);
+  const complex = entries.filter(([, v]) => typeof v === 'object' && v !== null);
+
+  let html = '';
+
+  if (primitives.length) {
+    html += `<div class="drawer-section">
+      <div class="drawer-section-title">Scalar Fields (${primitives.length})</div>
+      <div class="fields-list">
+        ${primitives.map(([k, v]) => `
+          <div class="field-row">
+            <span class="field-key" title="${escHtml(k)}">${escHtml(fmtColHeader(k))}</span>
+            <span class="field-val ${isIdOrCode(k) ? 'mono' : ''}">${renderPrimitiveVal(v, k)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (complex.length) {
+    html += `<div class="drawer-section">
+      <div class="drawer-section-title">Nested Structures & Collections (${complex.length})</div>
+      <div class="nested-cards-container">
+        ${complex.map(([k, v]) => renderComplexCard(k, v)).join('')}
+      </div>
+    </div>`;
+  }
+
+  const jsonStr = JSON.stringify(record, null, 2);
+  html += `<div class="drawer-section">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div class="drawer-section-title" style="margin-bottom:0">Raw JSON Payload</div>
+      <button class="copy-btn-sm" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(record))}, this)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copy JSON
+      </button>
+    </div>
+    <pre class="json-pre">${escHtml(jsonStr)}</pre>
+  </div>`;
+
+  return html;
+}
+
 // ── Navigation ───────────────────────────────────────────────────
 const PAGE_TITLES = {
   dashboard: 'Dashboard',
@@ -633,29 +909,7 @@ async function openBillDetail(idx) {
     try { detail = await API.getBillById(id); } catch {}
   }
 
-  const fields = Object.entries(detail).filter(([,v]) => typeof v !== 'object' || v === null);
-  const nested = Object.entries(detail).filter(([,v]) => typeof v === 'object' && v !== null);
-
-  let html = `<div class="drawer-section"><div class="drawer-section-title">Bill Fields</div>
-    ${fields.map(([k,v]) => `<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val ${['id','documentNumber'].includes(k)?'mono':''}">${v == null ? '<span class="text-muted">—</span>' : escHtml(String(v))}</span></div>`).join('')}
-  </div>`;
-
-  if (nested.length) {
-    html += `<div class="drawer-section"><div class="drawer-section-title">Nested Objects</div>
-      ${nested.map(([k,v]) => `<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val"><code style="font-size:11px">${escHtml(JSON.stringify(v).slice(0,120))}</code></span></div>`).join('')}
-    </div>`;
-  }
-
-  const jsonStr = JSON.stringify(detail, null, 2);
-  html += `<div class="drawer-section">
-    <div class="drawer-section-title">Raw Payload</div>
-    <button class="copy-btn-sm" id="drawerCopyBtn" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(detail))}, this)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-      Copy JSON
-    </button>
-    <pre class="json-pre">${escHtml(jsonStr)}</pre>
-  </div>`;
-
+  const html = buildRecordDetailHtml(detail, 'Bill Record');
   openDrawer(id || `Bill #${idx + 1}`, `bill_status: ${detail.billStatus || '—'} · currency: ${detail.currency || '—'}`, html);
 }
 
@@ -778,15 +1032,10 @@ function renderExplorerContent() {
 }
 
 function openExplorerDetail(idx) {
-  const r = App.explorerFiltered[idx];
+  const r = (App.explorerFiltered && App.explorerFiltered[idx]) || App.explorerData[idx];
   if (!r) return;
   const id = r.id || r.documentNumber || `Record #${idx+1}`;
-  const fields = Object.entries(r).filter(([,v]) => typeof v !== 'object' || v === null);
-  const nested = Object.entries(r).filter(([,v]) => typeof v === 'object' && v !== null);
-  let html = `<div class="drawer-section"><div class="drawer-section-title">Fields</div>${fields.map(([k,v]) => `<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val">${v==null?'<span class="text-muted">—</span>':escHtml(String(v))}</span></div>`).join('')}</div>`;
-  if (nested.length) html += `<div class="drawer-section"><div class="drawer-section-title">Nested</div>${nested.map(([k,v]) => `<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val"><code style="font-size:11px">${escHtml(JSON.stringify(v).slice(0,120))}</code></span></div>`).join('')}</div>`;
-  const js = JSON.stringify(r, null, 2);
-  html += `<div class="drawer-section"><div class="drawer-section-title">Raw JSON</div><button class="copy-btn-sm" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(r))},this)">Copy JSON</button><pre class="json-pre">${escHtml(js)}</pre></div>`;
+  const html = buildRecordDetailHtml(r, 'Data Explorer Record');
   openDrawer(String(id), 'Record detail', html);
 }
 
@@ -973,6 +1222,7 @@ function renderSvcTable() {
   const filtered = q
     ? App.svcData.filter(r => Object.values(r).some(v => v != null && JSON.stringify(v).toLowerCase().includes(q)))
     : App.svcData;
+  App.svcFiltered = filtered;
 
   safeText(document.getElementById('svcTableMeta'), `${filtered.length} of ${App.svcData.length}`);
 
@@ -994,7 +1244,7 @@ function renderSvcTable() {
 
   c.innerHTML = `<table class="data-table">
     <thead><tr>${cols.map(c=>`<th>${fmtColHeader(c)}</th>`).join('')}<th class="col-actions">—</th></tr></thead>
-    <tbody>${rows.map((r,i) => `<tr>${cols.map(col=>`<td class="${col==='id'?'mono':''}">${fmt(r[col],col)}</td>`).join('')}<td class="col-actions"><button class="btn-inspect" onclick="openSvcDetail(${start+i},${JSON.stringify(filtered.slice(start,start+App.svcPageSize).indexOf(r)+start)})">View</button></td></tr>`).join('')}</tbody>
+    <tbody>${rows.map((r,i) => `<tr>${cols.map(col=>`<td class="${col==='id'?'mono':''}">${fmt(r[col],col)}</td>`).join('')}<td class="col-actions"><button class="btn-inspect" onclick="openSvcDetail(${start+i})">View</button></td></tr>`).join('')}</tbody>
   </table>`;
 
   renderSvcPagination(filtered.length, totalPages);
@@ -1004,16 +1254,11 @@ function renderSvcTable() {
 }
 
 function openSvcDetail(idx) {
-  const r = App.svcData[idx];
+  const r = (App.svcFiltered && App.svcFiltered[idx]) || App.svcData[idx];
   if (!r) return;
   const id = r.id || r.documentNumber || `Record #${idx+1}`;
-  const fields = Object.entries(r).filter(([,v]) => typeof v !== 'object' || v === null);
-  const nested = Object.entries(r).filter(([,v]) => typeof v === 'object' && v !== null);
-  let html = `<div class="drawer-section"><div class="drawer-section-title">Fields</div>${fields.map(([k,v])=>`<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val">${v==null?'<span class="text-muted">—</span>':escHtml(String(v))}</span></div>`).join('')}</div>`;
-  if (nested.length) html += `<div class="drawer-section"><div class="drawer-section-title">Nested</div>${nested.map(([k,v])=>`<div class="field-row"><span class="field-key">${escHtml(k)}</span><span class="field-val"><code style="font-size:11px">${escHtml(JSON.stringify(v).slice(0,120))}</code></span></div>`).join('')}</div>`;
-  const js = JSON.stringify(r, null, 2);
-  html += `<div class="drawer-section"><div class="drawer-section-title">Raw JSON</div><button class="copy-btn-sm" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(r))},this)">Copy JSON</button><pre class="json-pre">${escHtml(js)}</pre></div>`;
-  openDrawer(String(id), `${App.currentServiceId} record`, html);
+  const html = buildRecordDetailHtml(r, `${App.currentServiceId || 'Service'} Record`);
+  openDrawer(String(id), `${App.currentServiceId || 'Service'} record detail`, html);
 }
 
 function renderSvcPagination(total, totalPages) {
