@@ -97,18 +97,45 @@ function safeText(el, txt) {
 
 function fmt(val, col) {
   if (val == null) return '<span class="muted">—</span>';
-  const s = String(val);
   const lo = (col || '').toLowerCase();
+
+  // Array of [YYYY, MM, DD] from Java LocalDate
+  if (Array.isArray(val) && val.length >= 3 && typeof val[0] === 'number') {
+    const y = val[0], m = String(val[1]).padStart(2, '0'), d = String(val[2]).padStart(2, '0');
+    return `<span class="mono" style="font-size:12px">${y}-${m}-${d}</span>`;
+  }
+
+  // Object formatting
+  if (typeof val === 'object' && val !== null) {
+    if ('amount' in val) {
+      const amt = Number(val.amount);
+      const curr = escHtml(val.currency || '');
+      const formattedAmt = isNaN(amt) ? val.amount : amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return `<span style="font-variant-numeric:tabular-nums; font-weight:600">${formattedAmt}</span> <span class="muted" style="font-size:11px">${curr}</span>`;
+    }
+    if ('id' in val && typeof val.id === 'string') {
+      return `<span class="mono">${escHtml(val.id)}</span>`;
+    }
+    return `<code style="font-size:11px;color:var(--text-muted)">${escHtml(JSON.stringify(val).slice(0, 36))}${JSON.stringify(val).length > 36 ? '…' : ''}</code>`;
+  }
+
+  const s = String(val);
+
   if (lo.includes('status') || lo.includes('state')) {
     return `<span class="badge ${statusBadgeClass(s)}">${escHtml(s)}</span>`;
   }
+
   if (lo.includes('amount') && !isNaN(Number(val))) {
-    return `<span style="font-variant-numeric:tabular-nums">${Number(val).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+    return `<span style="font-variant-numeric:tabular-nums; font-weight:600">${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
   }
-  if (typeof val === 'object') {
-    return `<code style="font-size:11px;color:var(--text-muted)">${escHtml(JSON.stringify(val).slice(0,40))}${JSON.stringify(val).length > 40 ? '…' : ''}</code>`;
+
+  if (lo.includes('date') || lo.includes('at')) {
+    if (s.includes('T') || s.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return `<span class="mono" title="${escHtml(s)}">${escHtml(s.slice(0, 10))}</span>`;
+    }
   }
-  if (s.length > 42) return `<span title="${escHtml(s)}">${escHtml(s.slice(0,40))}…</span>`;
+
+  if (s.length > 44) return `<span title="${escHtml(s)}">${escHtml(s.slice(0, 40))}…</span>`;
   return escHtml(s);
 }
 
@@ -645,7 +672,7 @@ function renderDashKpis() {
 
   grid.innerHTML = `
     <div class="kpi-card">
-      <div class="kpi-icon blue">
+      <div class="kpi-icon forest">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
       </div>
       <div class="kpi-body">
@@ -655,17 +682,17 @@ function renderDashKpis() {
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon blue">
+      <div class="kpi-icon forest">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg>
       </div>
       <div class="kpi-body">
         <span class="kpi-label">Registered Services</span>
         <span class="kpi-value">${totalServices}</span>
-        <span class="kpi-caption">Dynamic POJO registries</span>
+        <span class="kpi-caption">Dynamic schema registries</span>
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon green">
+      <div class="kpi-icon success">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
       </div>
       <div class="kpi-body">
@@ -675,7 +702,7 @@ function renderDashKpis() {
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon ${lastSync ? (lastSync.status === 'SUCCESS' ? 'green' : 'amber') : 'neutral'}">
+      <div class="kpi-icon ${lastSync ? (lastSync.status === 'SUCCESS' ? 'success' : 'warning') : 'neutral'}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
       </div>
       <div class="kpi-body">
@@ -696,7 +723,7 @@ function renderDashCharts() {
   if (App.dashCharts.status) { App.dashCharts.status.destroy(); App.dashCharts.status = null; }
   if (App.dashCharts.volume) { App.dashCharts.volume.destroy(); App.dashCharts.volume = null; }
 
-  const COLORS = ['#0F62FE','#16803C','#B7791F','#D92D20','#667085','#6366f1','#10b981'];
+  const COLORS = ['#3A553E', '#D8C7AA', '#20231F', '#855C18', '#555B51', '#4A6B4E', '#C2A377', '#324936'];
 
   // Chart 1: Bill status distribution
   const ctx1 = document.getElementById('chartBillStatus')?.getContext('2d');
@@ -712,10 +739,10 @@ function renderDashCharts() {
           datasets: [{ data: values, backgroundColor: COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }]
         },
         options: {
-          responsive: true, maintainAspectRatio: false, cutout: '68%',
+          responsive: true, maintainAspectRatio: false, cutout: '70%',
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#697586', font: { family: 'Inter', size: 11 }, padding: 12 } },
-            tooltip: { backgroundColor: '#172033', titleColor: '#fff', bodyColor: '#697586', padding: 10 }
+            legend: { position: 'bottom', labels: { color: '#555B51', font: { family: 'Inter', size: 11.5, weight: '500' }, padding: 14 } },
+            tooltip: { backgroundColor: '#1A211B', titleColor: '#fff', bodyColor: '#DCE5DB', padding: 10, cornerRadius: 6 }
           }
         }
       });
@@ -733,17 +760,17 @@ function renderDashCharts() {
       type: 'bar',
       data: {
         labels,
-        datasets: [{ label: 'Records', data, backgroundColor: COLORS.slice(0, data.length), borderRadius: 5, borderSkipped: false }]
+        datasets: [{ label: 'Records', data, backgroundColor: '#3A553E', hoverBackgroundColor: '#2D4330', borderRadius: 4, borderSkipped: false }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: data.length > 3 ? 'y' : 'x',
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: '#172033', titleColor: '#fff', bodyColor: '#697586', padding: 10 }
+          tooltip: { backgroundColor: '#1A211B', titleColor: '#fff', bodyColor: '#DCE5DB', padding: 10, cornerRadius: 6 }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: '#697586', font: { size: 11 } } },
-          y: { beginAtZero: true, grid: { color: '#E4E8EF' }, ticks: { color: '#697586', font: { size: 11 } } }
+          x: { grid: { display: false }, ticks: { color: '#82897E', font: { size: 11, family: 'Inter' } } },
+          y: { beginAtZero: true, grid: { color: '#E4DFD5' }, ticks: { color: '#82897E', font: { size: 11, family: 'Inter' } } }
         }
       }
     });
@@ -1202,9 +1229,9 @@ function renderSvcKpis(desc) {
   const COLORS = { c1:'blue', c2:'green', c3:'amber', c4:'neutral' };
 
   g.innerHTML = `
-    <div class="kpi-card"><div class="kpi-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div><div class="kpi-body"><span class="kpi-label">Total Records</span><span class="kpi-value">${data.length.toLocaleString()}</span><span class="kpi-caption">In ${escHtml(desc.displayName||desc.serviceId)}</span></div></div>
-    <div class="kpi-card"><div class="kpi-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">${topStatus ? escHtml(topStatus[0]) : 'Status'}</span><span class="kpi-value">${topStatus ? topStatus[1].toLocaleString() : '—'}</span><span class="kpi-caption">Primary status</span></div></div>
-    <div class="kpi-card"><div class="kpi-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg></div><div class="kpi-body"><span class="kpi-label">Currencies</span><span class="kpi-value">${Object.keys(currencies).length || '—'}</span><span class="kpi-caption">${Object.keys(currencies).slice(0,3).join(', ')||'No currency data'}</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon forest"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div><div class="kpi-body"><span class="kpi-label">Total Records</span><span class="kpi-value">${data.length.toLocaleString()}</span><span class="kpi-caption">In ${escHtml(desc.displayName||desc.serviceId)}</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">${topStatus ? escHtml(topStatus[0]) : 'Status'}</span><span class="kpi-value">${topStatus ? topStatus[1].toLocaleString() : '—'}</span><span class="kpi-caption">Primary status</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon warning"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg></div><div class="kpi-body"><span class="kpi-label">Currencies</span><span class="kpi-value">${Object.keys(currencies).length || '—'}</span><span class="kpi-caption">${Object.keys(currencies).slice(0,3).join(', ')||'No currency data'}</span></div></div>
     <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div><div class="kpi-body"><span class="kpi-label">${totalGross > 0 ? 'Gross Total' : 'Records'}</span><span class="kpi-value" style="font-size:${totalGross>0?'18px':'26px'}">${totalGross > 0 ? totalGross.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : data.length.toLocaleString()}</span><span class="kpi-caption">${totalGross > 0 ? 'Aggregated volume' : 'Total stored'}</span></div></div>
   `;
 }
@@ -1216,7 +1243,7 @@ function renderSvcCharts(desc) {
   const data = App.svcData;
   if (!data.length) return;
 
-  const COLORS = ['#0F62FE','#16803C','#B7791F','#D92D20','#667085','#6366f1'];
+  const COLORS = ['#3A553E', '#D8C7AA', '#20231F', '#855C18', '#555B51', '#4A6B4E', '#C2A377', '#324936'];
 
   // Chart 1: Status distribution doughnut
   const statusMap = {};
@@ -1226,7 +1253,7 @@ function renderSvcCharts(desc) {
     App.svcCharts.c1 = new Chart(ctx1, {
       type: 'doughnut',
       data: { labels: Object.keys(statusMap), datasets: [{ data: Object.values(statusMap), backgroundColor: COLORS.slice(0, Object.keys(statusMap).length), borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { color: '#697586', font: { family: 'Inter', size: 11 }, padding: 12 } }, tooltip: { backgroundColor: '#172033', titleColor: '#fff', bodyColor: '#697586', padding: 10, callbacks: { label(ctx) { const t = Object.values(statusMap).reduce((a,b)=>a+b,0); return ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/t)*100).toFixed(1)}%)`; } } } } }
+      options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#555B51', font: { family: 'Inter', size: 11.5, weight: '500' }, padding: 14 } }, tooltip: { backgroundColor: '#1A211B', titleColor: '#fff', bodyColor: '#DCE5DB', padding: 10, cornerRadius: 6, callbacks: { label(ctx) { const t = Object.values(statusMap).reduce((a,b)=>a+b,0); return ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/t)*100).toFixed(1)}%)`; } } } } }
     });
   }
 
@@ -1238,8 +1265,8 @@ function renderSvcCharts(desc) {
   if (ctx2 && secKeys.length) {
     App.svcCharts.c2 = new Chart(ctx2, {
       type: 'bar',
-      data: { labels: secKeys, datasets: [{ label: 'Count', data: secKeys.map(k=>secMap[k]), backgroundColor: '#0F62FE', hoverBackgroundColor: '#0353E9', borderRadius: 4, borderSkipped: false }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#172033', titleColor: '#fff', bodyColor: '#697586', padding: 10 } }, scales: { x: { grid: { display: false }, ticks: { color: '#697586', font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: '#E4E8EF' }, ticks: { color: '#697586', font: { size: 11 } } } } }
+      data: { labels: secKeys, datasets: [{ label: 'Count', data: secKeys.map(k=>secMap[k]), backgroundColor: '#3A553E', hoverBackgroundColor: '#2D4330', borderRadius: 4, borderSkipped: false }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1A211B', titleColor: '#fff', bodyColor: '#DCE5DB', padding: 10, cornerRadius: 6 } }, scales: { x: { grid: { display: false }, ticks: { color: '#82897E', font: { size: 11, family: 'Inter' } } }, y: { beginAtZero: true, grid: { color: '#E4DFD5' }, ticks: { color: '#82897E', font: { size: 11, family: 'Inter' } } } } }
     });
   }
 }

@@ -6,10 +6,10 @@
   <title>SAP Subscription Billing — Data Operations Console</title>
   <meta name="description" content="Enterprise data operations console for SAP Subscription Billing. Automated SAP data ingestion, dynamic schema generation, and subscription billing analytics.">
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Manrope (Headings), Inter (Body), JetBrains Mono (Code/Metrics) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -115,22 +115,45 @@
       <section class="view-pane active" id="view-dashboard">
         <div class="page-content">
 
-          <!-- Hero -->
+          <!-- Editorial Hero -->
           <div class="overview-hero">
             <div class="hero-left">
-              <div class="hero-eyebrow">System Overview</div>
-              <div class="hero-title">SAP Data Operations Console</div>
-              <div class="hero-desc">Monitor SAP data ingestion, service health, billing records, and synchronization activity. Automated SAP data ingestion, dynamic schema generation, and subscription billing analytics.</div>
-              <div class="hero-tags">
-                <div class="hero-tag"><strong id="heroServices">—</strong>&nbsp;Active Services</div>
-                <div class="hero-tag"><strong id="heroRecords">—</strong>&nbsp;Stored Records</div>
+              <div class="hero-eyebrow">Enterprise Telemetry &amp; Ingestion</div>
+              <h1 class="hero-title">SAP Billing Operations Console</h1>
+              <p class="hero-desc">Automated event ingestion, dynamic schema synthesis, and real-time reconciliation telemetry for enterprise subscription billing operations.</p>
+              <div class="hero-metrics-strip">
+                <div class="hero-stat">
+                  <span class="hero-stat-val" id="heroServices">—</span>
+                  <span class="hero-stat-lbl">Active Services</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                  <span class="hero-stat-val" id="heroRecords">—</span>
+                  <span class="hero-stat-lbl">Stored Records</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                  <span class="hero-stat-val" style="color:var(--brand-forest);font-size:15px;display:flex;align-items:center;gap:6px">
+                    <span class="status-dot live"></span> Live Active
+                  </span>
+                  <span class="hero-stat-lbl">Pipeline Status</span>
+                </div>
               </div>
             </div>
             <div class="hero-right">
-              <button class="btn btn-secondary" id="dashSyncBillsBtn" onclick="syncService('bills', this)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                Sync Bills
-              </button>
+              <div class="hero-action-card">
+                <div>
+                  <div class="hero-action-header">
+                    <span class="status-pulse-dot"></span>
+                    <span class="hero-action-title">Pipeline Orchestration</span>
+                  </div>
+                  <div class="hero-action-meta">Ingest latest billing and subscriber records from SAP API gateway into the active datastore.</div>
+                </div>
+                <button class="btn btn-primary hero-sync-btn" id="dashSyncBillsBtn" onclick="syncService('bills', this)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  <span>Synchronize Bills</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -163,7 +186,7 @@
           <div class="panel mb-6">
             <div class="panel-header">
               <div><div class="panel-title">Connected SAP Services</div><div class="panel-subtitle">Registry of all dynamically registered services and their status</div></div>
-              <button class="btn btn-sm btn-secondary" onclick="navigate('services')">View All</button>
+              <button class="btn btn-sm btn-secondary" onclick="navigate('explorer')">Explore Records</button>
             </div>
             <div id="dashServicesGrid" class="panel-body">
               <div class="spinner-center"><div class="spinner spinner-lg"></div></div>
