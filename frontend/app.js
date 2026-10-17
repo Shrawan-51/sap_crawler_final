@@ -402,6 +402,8 @@ function buildRecordDetailHtml(record, contextTitle = 'Record Detail') {
     return `<div class="empty-state"><div class="empty-state-title">No data</div></div>`;
   }
 
+  App._currentDrawerRecord = record;
+
   const entries = Object.entries(record).filter(([k]) => k !== 'rawJson' && k !== 'raw_json');
   const primitives = entries.filter(([, v]) => typeof v !== 'object' || v === null);
   const complex = entries.filter(([, v]) => typeof v === 'object' && v !== null);
@@ -435,15 +437,49 @@ function buildRecordDetailHtml(record, contextTitle = 'Record Detail') {
   html += `<div class="drawer-section">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
       <div class="drawer-section-title" style="margin-bottom:0">Raw JSON Payload</div>
-      <button class="copy-btn-sm" onclick="copyToClipboard(${JSON.stringify(JSON.stringify(record))}, this)">
+      <button class="copy-btn-sm" id="copyDrawerJsonBtn" onclick="copyDrawerJson(this)">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        Copy JSON
+        <span>Copy JSON</span>
       </button>
     </div>
     <pre class="json-pre">${escHtml(jsonStr)}</pre>
   </div>`;
 
   return html;
+}
+
+function copyDrawerJson(btn) {
+  if (App._currentDrawerRecord) {
+    const text = JSON.stringify(App._currentDrawerRecord, null, 2);
+    copyText(text, btn);
+  }
+}
+
+function copyText(text, btn) {
+  if (!navigator.clipboard) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  } else {
+    navigator.clipboard.writeText(text).catch(e => console.warn('Clipboard write failed:', e));
+  }
+  if (btn) {
+    const origHtml = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = `✓ Copied`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = origHtml;
+    }, 2000);
+  }
+  showToast('Copied to clipboard', 'success');
+}
+
+function copyToClipboard(text, btn) {
+  copyText(typeof text === 'string' ? text : JSON.stringify(text, null, 2), btn);
 }
 
 // ── Navigation ───────────────────────────────────────────────────
@@ -541,25 +577,19 @@ function updateSidebarBadges() {
 }
 
 function updateDbStatusIndicator() {
-  const engine = App.stats?.dbEngine || null;
-  const dot1 = document.getElementById('dbDot');
-  const dot2 = document.getElementById('topbarDot');
-  const nameEl = document.getElementById('dbNameText');
-  const typeEl = document.getElementById('dbTypeText');
+  const hasStats = Boolean(App.stats);
+  const dot = document.getElementById('topbarDot');
   const connTxt = document.getElementById('topbarConnText');
+  const syncTxt = document.getElementById('sidebarSyncStatus');
 
-  if (engine) {
-    const isPg = engine.toLowerCase().includes('postgresql') || engine.toLowerCase().includes('neon');
-    const cls = isPg ? 'online' : 'unknown';
-    [dot1, dot2].forEach(d => { if (d) { d.className = `status-dot ${cls}`; } });
-    const short = isPg ? 'PostgreSQL' : (engine.includes('H2') ? 'H2 Embedded' : engine);
-    safeText(nameEl, short);
-    safeText(typeEl, isPg ? 'Cloud / Local DB' : 'Embedded Fallback');
-    safeText(connTxt, short);
+  if (hasStats) {
+    if (dot) dot.className = 'status-dot online';
+    safeText(connTxt, 'Live Connected');
+    safeText(syncTxt, 'Live Active');
   } else {
-    safeText(nameEl, 'Not connected');
-    safeText(typeEl, 'Database');
-    safeText(connTxt, 'Unavailable');
+    if (dot) dot.className = 'status-dot offline';
+    safeText(connTxt, 'Connecting…');
+    safeText(syncTxt, 'Connecting…');
   }
 }
 
@@ -659,7 +689,6 @@ function renderDashKpis() {
   // Update hero
   safeText(document.getElementById('heroServices'), totalServices);
   safeText(document.getElementById('heroRecords'), totalRecords.toLocaleString());
-  safeText(document.getElementById('heroDb'), App.stats?.dbEngine || 'Unknown DB');
 }
 
 function renderDashCharts() {
@@ -725,7 +754,7 @@ function renderDashServices() {
   const el = document.getElementById('dashServicesGrid');
   if (!el) return;
   if (!App.services.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg></div><div class="empty-state-title">No Services Registered</div><div class="empty-state-desc">Register a SAP service to begin ingesting and exploring data.</div><button class="btn btn-primary" style="margin-top:12px" onclick="openAddServiceModal()">Register First Service</button></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg></div><div class="empty-state-title">No Services Registered</div><div class="empty-state-desc">Use the + Add Service button in the top right header to connect a new SAP service.</div></div>`;
     return;
   }
   el.innerHTML = `<div class="services-grid">${App.services.map(s => `
@@ -939,17 +968,17 @@ function renderServicesTable() {
   safeText(document.getElementById('servicesTableMeta'), `${data.length} services`);
 
   if (!data.length) {
-    c.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle></svg></div><div class="empty-state-title">${App.services.length ? 'No matching services' : 'No services registered'}</div><button class="btn btn-primary" style="margin-top:12px" onclick="openAddServiceModal()">Register Service</button></div>`;
+    c.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"></circle></svg></div><div class="empty-state-title">${App.services.length ? 'No matching services' : 'No services registered'}</div><div class="empty-state-desc">Use the + Add Service button in the top right header to register services.</div></div>`;
     return;
   }
 
   c.innerHTML = `<table class="data-table">
-    <thead><tr><th>Service ID</th><th>Display Name</th><th>Records</th><th>Table</th><th>Description</th><th class="col-actions">Actions</th></tr></thead>
+    <thead><tr><th>Service ID</th><th>Display Name</th><th>Records</th><th>Status</th><th>Description</th><th class="col-actions">Actions</th></tr></thead>
     <tbody>${data.map(s => `<tr>
       <td><span class="badge badge-blue">${escHtml(s.serviceId)}</span></td>
-      <td>${escHtml(s.displayName || '—')}</td>
+      <td><strong>${escHtml(s.displayName || '—')}</strong></td>
       <td><strong>${Number(s.recordCount||0).toLocaleString()}</strong></td>
-      <td class="mono text-muted">${escHtml(s.tableName || '—')}</td>
+      <td><span class="badge badge-success">Active</span></td>
       <td class="muted">${escHtml((s.description || '').slice(0,60))}${(s.description||'').length>60?'…':''}</td>
       <td class="col-actions" style="width:120px;text-align:right">
         <button class="btn-inspect" onclick="navigate('service','${escHtml(s.serviceId)}')">Explore</button>
@@ -1173,7 +1202,7 @@ function renderSvcKpis(desc) {
   const COLORS = { c1:'blue', c2:'green', c3:'amber', c4:'neutral' };
 
   g.innerHTML = `
-    <div class="kpi-card"><div class="kpi-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div><div class="kpi-body"><span class="kpi-label">Total Records</span><span class="kpi-value">${data.length.toLocaleString()}</span><span class="kpi-caption">In ${escHtml(desc.tableName||desc.serviceId)}</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div><div class="kpi-body"><span class="kpi-label">Total Records</span><span class="kpi-value">${data.length.toLocaleString()}</span><span class="kpi-caption">In ${escHtml(desc.displayName||desc.serviceId)}</span></div></div>
     <div class="kpi-card"><div class="kpi-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="kpi-body"><span class="kpi-label">${topStatus ? escHtml(topStatus[0]) : 'Status'}</span><span class="kpi-value">${topStatus ? topStatus[1].toLocaleString() : '—'}</span><span class="kpi-caption">Primary status</span></div></div>
     <div class="kpi-card"><div class="kpi-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg></div><div class="kpi-body"><span class="kpi-label">Currencies</span><span class="kpi-value">${Object.keys(currencies).length || '—'}</span><span class="kpi-caption">${Object.keys(currencies).slice(0,3).join(', ')||'No currency data'}</span></div></div>
     <div class="kpi-card"><div class="kpi-icon neutral"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div><div class="kpi-body"><span class="kpi-label">${totalGross > 0 ? 'Gross Total' : 'Records'}</span><span class="kpi-value" style="font-size:${totalGross>0?'18px':'26px'}">${totalGross > 0 ? totalGross.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : data.length.toLocaleString()}</span><span class="kpi-caption">${totalGross > 0 ? 'Aggregated volume' : 'Total stored'}</span></div></div>

@@ -37,29 +37,13 @@
 
     <div class="sidebar-scroll">
 
-      <!-- Overview -->
-      <div class="nav-group">
-        <div class="nav-group-label">Overview</div>
-        <nav>
-          <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            <span>Dashboard</span>
-          </button>
-        </nav>
-      </div>
-
       <!-- Data Operations -->
       <div class="nav-group">
         <div class="nav-group-label">Data Operations</div>
         <nav>
-          <button class="nav-item" id="nav-bills" onclick="navigate('bills')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span>Bills</span>
-          </button>
-          <button class="nav-item" id="nav-services" onclick="navigate('services')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path></svg>
-            <span>Services</span>
-            <span class="nav-badge" id="sidebarServiceCount">—</span>
+          <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Dashboard</span>
           </button>
           <button class="nav-item" id="nav-explorer" onclick="navigate('explorer')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -72,55 +56,22 @@
         </nav>
       </div>
 
-      <!-- Automation -->
-      <div class="nav-group">
-        <div class="nav-group-label">
-          Automation
-          <button id="sidebarAddBtn" title="Register New Service" onclick="openAddServiceModal()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </button>
-        </div>
-        <nav>
-          <button class="nav-item" id="nav-setup" onclick="navigate('setup')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            <span>Service Setup</span>
-          </button>
-          <button class="nav-item" id="nav-schema" onclick="navigate('schema')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            <span>Schema &amp; Models</span>
-          </button>
-        </nav>
-      </div>
-
-      <!-- System -->
-      <div class="nav-group">
-        <div class="nav-group-label">System</div>
-        <nav>
-          <button class="nav-item" id="nav-dbstatus" onclick="navigate('dbstatus')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-            <span>Database Status</span>
-          </button>
-          <button class="nav-item" id="nav-apiref" onclick="navigate('apiref')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
-            <span>API Reference</span>
-          </button>
-        </nav>
-      </div>
-
-      <!-- Dynamic services sub-nav -->
-      <div class="nav-group" id="dynamicServicesGroup" style="display:none">
+      <!-- Service Dashboards -->
+      <div class="nav-group" id="dynamicServicesGroup">
         <div class="nav-group-label">Service Dashboards</div>
-        <nav id="dynamicServicesNav"></nav>
+        <nav id="dynamicServicesNav">
+          <!-- Dynamically populated from API (Bills, Subscriptions, Forecasts, etc.) -->
+        </nav>
       </div>
 
     </div>
 
     <div class="sidebar-footer">
-      <div class="db-status-chip">
-        <span class="status-dot unknown" id="dbDot"></span>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:var(--r-sm);border:1px solid rgba(255,255,255,0.06);">
+        <span class="status-dot live" style="width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 6px rgba(36,161,72,0.6)"></span>
         <div style="min-width:0">
-          <div class="db-name" id="dbNameText">Connecting…</div>
-          <div style="font-size:10px;color:var(--text-sidebar-muted);margin-top:1px" id="dbTypeText">Database</div>
+          <div style="font-size:12px;font-weight:600;color:#fff">SAP Integration</div>
+          <div style="font-size:10px;color:var(--text-sidebar-muted);margin-top:1px" id="sidebarSyncStatus">Live Active</div>
         </div>
       </div>
     </div>
@@ -171,9 +122,8 @@
               <div class="hero-title">SAP Data Operations Console</div>
               <div class="hero-desc">Monitor SAP data ingestion, service health, billing records, and synchronization activity. Automated SAP data ingestion, dynamic schema generation, and subscription billing analytics.</div>
               <div class="hero-tags">
-                <div class="hero-tag"><strong id="heroServices">—</strong>&nbsp;Registered Services</div>
+                <div class="hero-tag"><strong id="heroServices">—</strong>&nbsp;Active Services</div>
                 <div class="hero-tag"><strong id="heroRecords">—</strong>&nbsp;Stored Records</div>
-                <div class="hero-tag"><strong id="heroDb">—</strong></div>
               </div>
             </div>
             <div class="hero-right">
@@ -304,10 +254,6 @@
               <button class="btn btn-secondary" onclick="loadServices()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                 Refresh
-              </button>
-              <button class="btn btn-primary" onclick="openAddServiceModal()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Register Service
               </button>
             </div>
           </div>
@@ -860,8 +806,8 @@
             </div>
           </div>
           <div class="meta-row" style="padding:0 28px 16px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)">
-            <span>Table: <code id="svcDashTable">—</code></span>
-            <span><a href="#" id="svcDashEndpointLink" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">API Endpoint ↗</a></span>
+            <span>Status: <span class="badge badge-success" style="font-size:11px">Active</span></span>
+            <span><a href="#" id="svcDashEndpointLink" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">SAP Endpoint ↗</a></span>
             <span id="svcDashRecords" style="font-weight:600;color:var(--text-primary)">0 records</span>
           </div>
         </div>
