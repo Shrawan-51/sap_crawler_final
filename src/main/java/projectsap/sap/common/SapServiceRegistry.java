@@ -73,6 +73,15 @@ public class SapServiceRegistry {
                 "projectsap.sap.subscription.model.Subscription",
                 "Manages customer subscriptions and contract lifecycles from SAP Subscription Billing API"
         );
+
+        // Register SAP Subscription Billing - Allowances Service (Dynamic registration)
+        registerDynamic(
+                "allowances",
+                "SAP Subscription Billing - Allowances",
+                "https://sandbox.api.sap.com/subscriptionbilling/api/allowance-template/v1/allowance-templates?%24count=true&pageSize=10",
+                "projectsap.sap.allowances.model.Allowances",
+                "Template and allowance lifecycle records from SAP Subscription Billing API"
+        );
     }
 
     /**
@@ -80,6 +89,18 @@ public class SapServiceRegistry {
      */
     public static <T> void register(ServiceDescriptor<T> descriptor) {
         REGISTRY.put(descriptor.getServiceId().toLowerCase(), descriptor);
+    }
+
+    /**
+     * Unregisters a service descriptor by service ID.
+     */
+    public static boolean unregister(String serviceId) {
+        if (serviceId == null) return false;
+        boolean removed = REGISTRY.remove(serviceId.toLowerCase()) != null;
+        if (removed) {
+            LOGGER.info("Unregistered service '{}' from registry.", serviceId);
+        }
+        return removed;
     }
 
     /**

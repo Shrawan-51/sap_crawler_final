@@ -29,75 +29,46 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * ProductMetadata
+ * ProductMetaData
  */
 @JsonPropertyOrder({
-  ProductMetadata.JSON_PROPERTY_CHANGED_AT,
-  ProductMetadata.JSON_PROPERTY_CREATED_AT
+  ProductMetaData.JSON_PROPERTY_VERSION
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-09T22:59:29.848256200+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
-public class ProductMetadata {
-  public static final String JSON_PROPERTY_CHANGED_AT = "changedAt";
-  private String changedAt;
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-15T17:59:46.907430400+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+public class ProductMetaData {
+  public static final String JSON_PROPERTY_VERSION = "version";
+  private Integer version;
 
-  public static final String JSON_PROPERTY_CREATED_AT = "createdAt";
-  private String createdAt;
-
-  public ProductMetadata() { 
+  public ProductMetaData() { 
   }
 
-  public ProductMetadata changedAt(String changedAt) {
-    this.changedAt = changedAt;
+  public ProductMetaData version(Integer version) {
+    this.version = version;
     return this;
   }
 
    /**
-   * Get changedAt
-   * @return changedAt
+   * Get version
+   * @return version
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonProperty(JSON_PROPERTY_VERSION)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getChangedAt() {
-    return changedAt;
+  public Integer getVersion() {
+    return version;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonProperty(JSON_PROPERTY_VERSION)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setChangedAt(String changedAt) {
-    this.changedAt = changedAt;
-  }
-
-
-  public ProductMetadata createdAt(String createdAt) {
-    this.createdAt = createdAt;
-    return this;
-  }
-
-   /**
-   * Get createdAt
-   * @return createdAt
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_CREATED_AT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getCreatedAt() {
-    return createdAt;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_CREATED_AT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setCreatedAt(String createdAt) {
-    this.createdAt = createdAt;
+  public void setVersion(Integer version) {
+    this.version = version;
   }
 
 
   /**
-   * Return true if this ProductMetadata object is equal to o.
+   * Return true if this ProductMetaData object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -107,22 +78,20 @@ public class ProductMetadata {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ProductMetadata productMetadata = (ProductMetadata) o;
-    return Objects.equals(this.changedAt, productMetadata.changedAt) &&
-        Objects.equals(this.createdAt, productMetadata.createdAt);
+    ProductMetaData productMetaData = (ProductMetaData) o;
+    return Objects.equals(this.version, productMetaData.version);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(changedAt, createdAt);
+    return Objects.hash(version);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ProductMetadata {\n");
-    sb.append("    changedAt: ").append(toIndentedString(changedAt)).append("\n");
-    sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
+    sb.append("class ProductMetaData {\n");
+    sb.append("    version: ").append(toIndentedString(version)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -170,14 +139,9 @@ public class ProductMetadata {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `changedAt` to the URL query string
-    if (getChangedAt() != null) {
-      joiner.add(String.format("%schangedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getChangedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `createdAt` to the URL query string
-    if (getCreatedAt() != null) {
-      joiner.add(String.format("%screatedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCreatedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `version` to the URL query string
+    if (getVersion() != null) {
+      joiner.add(String.format("%sversion%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getVersion()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     return joiner.toString();

@@ -202,19 +202,109 @@ public class BillServer {
             if (handlePreflight(exchange)) return;
 
             try {
-                List<Map<String, Object>> serviceList = new ArrayList<>();
-                for (SapServiceRegistry.ServiceDescriptor<?> desc : SapServiceRegistry.getAllDescriptors().values()) {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("serviceId", desc.getServiceId());
-                    item.put("displayName", desc.getDisplayName());
-                    item.put("defaultEndpoint", desc.getDefaultEndpoint());
-                    item.put("pojoClass", desc.getPojoClass().getName());
-                    item.put("description", desc.getDescription());
-                    item.put("tableName", DatabaseManager.resolveTableName(desc.getServiceId()));
-                    item.put("recordCount", DatabaseManager.getServiceCount(desc.getServiceId()));
-                    serviceList.add(item);
+                String method = exchange.getRequestMethod().toUpperCase();
+                String path = exchange.getRequestURI().getPath();
+
+                if ("GET".equals(method)) {
+                    List<Map<String, Object>> serviceList = new ArrayList<>();
+                    for (SapServiceRegistry.ServiceDescriptor<?> desc : SapServiceRegistry.getAllDescriptors().values()) {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("serviceId", desc.getServiceId());
+                        item.put("displayName", desc.getDisplayName());
+                        item.put("defaultEndpoint", desc.getDefaultEndpoint());
+                        item.put("pojoClass", desc.getPojoClass().getName());
+                        item.put("description", desc.getDescription());
+                        item.put("tableName", DatabaseManager.resolveTableName(desc.getServiceId()));
+                        item.put("recordCount", DatabaseManager.getServiceCount(desc.getServiceId()));
+                        serviceList.add(item);
+                    }
+                    sendJson(exchange, 200, GenericSapParser.toJson(serviceList));
+                    return;
                 }
-                sendJson(exchange, 200, GenericSapParser.toJson(serviceList));
+
+                if ("POST".equals(method)) {
+                    var mapper = GenericSapParser.getMapper();
+                    var root = mapper.readTree(exchange.getRequestBody());
+                    String serviceId = root.has("serviceId") ? root.get("serviceId").asText().trim() : null;
+                    if (serviceId == null || serviceId.isEmpty()) {
+                        if (root.has("serviceName")) {
+                            serviceId = root.get("serviceName").asText().trim();
+                        }
+                    }
+                    if (serviceId == null || serviceId.isEmpty()) {
+                        sendJson(exchange, 400, "{\"success\":false,\"error\":\"Field 'serviceId' is required\"}");
+                        return;
+                    }
+                    serviceId = serviceId.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+
+                    String displayName = root.has("displayName") ? root.get("displayName").asText().trim() : "SAP - " + serviceId;
+                    String endpoint = root.has("endpoint") ? root.get("endpoint").asText().trim() : (root.has("serviceUrl") ? root.get("serviceUrl").asText().trim() : null);
+                    if (endpoint == null || endpoint.isEmpty()) {
+                        sendJson(exchange, 400, "{\"success\":false,\"error\":\"Field 'endpoint' or 'serviceUrl' is required\"}");
+                        return;
+                    }
+                    String description = root.has("description") ? root.get("description").asText().trim() : "Dynamically registered SAP service";
+                    boolean syncNow = !root.has("syncNow") || root.get("syncNow").asBoolean(true);
+
+                    // Register in dynamic registry
+                    SapServiceRegistry.register(new SapServiceRegistry.ServiceDescriptor<>(
+                        serviceId, displayName, endpoint, Object.class, description
+                    ));
+
+                    int count = 0;
+                    if (syncNow) {
+                        try {
+                            String json = SapApiClient.fetchFromUrl(endpoint);
+                            count = DatabaseManager.saveServiceData(serviceId, json);
+                        } catch (Exception syncErr) {
+                            LOGGER.warn("Service registered but initial sync failed: {}", syncErr.getMessage());
+                        }
+                    }
+
+                    Map<String, Object> resp = new HashMap<>();
+                    resp.put("success", true);
+                    resp.put("serviceId", serviceId);
+                    resp.put("displayName", displayName);
+                    resp.put("recordCount", count);
+                    resp.put("message", "Service '" + serviceId + "' added successfully" + (syncNow ? " (" + count + " records synced)" : ""));
+                    sendJson(exchange, 200, GenericSapParser.toJson(resp));
+                    return;
+                }
+
+                if ("DELETE".equals(method)) {
+                    String serviceId = null;
+                    if (path.length() > "/api/services/".length()) {
+                        serviceId = path.substring("/api/services/".length()).trim();
+                    } else {
+                        Map<String, String> qParams = parseQuery(exchange.getRequestURI().getQuery());
+                        serviceId = qParams.get("serviceId");
+                        if (serviceId == null) serviceId = qParams.get("id");
+                    }
+
+                    if (serviceId == null || serviceId.trim().isEmpty()) {
+                        sendJson(exchange, 400, "{\"success\":false,\"error\":\"Service ID must be specified\"}");
+                        return;
+                    }
+                    serviceId = serviceId.trim().toLowerCase();
+                    if ("bills".equalsIgnoreCase(serviceId)) {
+                        sendJson(exchange, 400, "{\"success\":false,\"error\":\"Core 'bills' service cannot be deleted\"}");
+                        return;
+                    }
+
+                    boolean unregistered = SapServiceRegistry.unregister(serviceId);
+                    boolean tableDropped = DatabaseManager.deleteServiceTable(serviceId);
+
+                    Map<String, Object> resp = new HashMap<>();
+                    resp.put("success", true);
+                    resp.put("serviceId", serviceId);
+                    resp.put("unregistered", unregistered);
+                    resp.put("tableDropped", tableDropped);
+                    resp.put("message", "Service '" + serviceId + "' deleted successfully");
+                    sendJson(exchange, 200, GenericSapParser.toJson(resp));
+                    return;
+                }
+
+                sendJson(exchange, 405, "{\"error\":\"Method not allowed\"}");
             } catch (Exception e) {
                 LOGGER.error("Error handling /api/services request: {}", e.getMessage(), e);
                 sendJson(exchange, 500, "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
@@ -307,7 +397,7 @@ public class BillServer {
 
     static void addCorsHeaders(HttpExchange exchange) {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     }
 

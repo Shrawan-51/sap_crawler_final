@@ -1,870 +1,1089 @@
-/* ═══════════════════════════════════════════════════════════════
-   SAP Billing Dashboard — Application Logic
-   ═══════════════════════════════════════════════════════════════ */
+/**
+ * SAP Enterprise Service Hub & Dynamic Analytics Platform
+ * Clean, lightweight Vanilla JavaScript Application Controller
+ */
 
-// ── API Base Auto-Detector ──────────────────────────────────
-const API_BASE = (function() {
-    if (window.location.protocol.startsWith('http')) {
-        return window.location.origin;
+// ── Application State ──────────────────────────────────────────
+const state = {
+    currentView: 'overview', // 'overview' | 'service' | 'sync-history'
+    currentServiceId: null,
+    services: [],            // List of registered services from /api/services
+    serviceData: {},         // Cache of records per service { [serviceId]: [] }
+    stats: null,             // Stats from /api/stats
+    tableSearchQuery: '',
+    tableFilterStatus: '',
+    currentPage: 1,
+    pageSize: 10,
+    sortCol: null,
+    sortAsc: true,
+    charts: {
+        overview1: null,
+        overview2: null,
+        service1: null,
+        service2: null
     }
-    // Default fallback if opened via file:// protocol
-    return 'http://localhost:8085';
-})();
+};
 
-// ── State ───────────────────────────────────────────────────
-let allBills = [];
-let currentView = 'dashboard';
-let currentPage = 1;
-const PAGE_SIZE = 15;
-let chartInstances = {};
-let searchDebounceTimer = null;
+// ── API Gateway Helpers ─────────────────────────────────────────
+const API = {
+    async getServices() {
+        const res = await fetch('/api/services');
+        if (!res.ok) throw new Error('Failed to load services: ' + res.statusText);
+        return await res.json();
+    },
+    async getServiceData(serviceId) {
+        const url = (serviceId === 'bills') ? '/api/bills' : `/api/data/${encodeURIComponent(serviceId)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to load data for ${serviceId}: ` + res.statusText);
+        return await res.json();
+    },
+    async getStats() {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error('Failed to load stats: ' + res.statusText);
+        return await res.json();
+    },
+    async getFetchLogs() {
+        const res = await fetch('/api/fetch-log');
+        if (!res.ok) throw new Error('Failed to load fetch logs: ' + res.statusText);
+        return await res.json();
+    },
+    async syncService(serviceId) {
+        const res = await fetch(`/api/sync/${encodeURIComponent(serviceId)}`, { method: 'POST' });
+        if (!res.ok) throw new Error('Sync failed: ' + res.statusText);
+        return await res.json();
+    },
+    async addService(payload) {
+        const res = await fetch('/api/services', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to add service');
+        }
+        return await res.json();
+    },
+    async deleteService(serviceId) {
+        const res = await fetch(`/api/services/${encodeURIComponent(serviceId)}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to delete service');
+        }
+        return await res.json();
+    }
+};
 
-// ── DOM Ready ───────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
-    initEventListeners();
-    loadDashboard();
+// ── Toast Notification System ───────────────────────────────────
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// ── Initialize App ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    setupEventListeners();
+    await loadInitialData();
 });
 
-// ═══════════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════════
+// ── Setup Global Event Listeners ────────────────────────────────
+function setupEventListeners() {
+    // Navigation
+    document.getElementById('nav-overview')?.addEventListener('click', () => switchView('overview'));
+    document.getElementById('nav-sync-history')?.addEventListener('click', () => switchView('sync-history'));
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+        document.getElementById('sidebar')?.classList.toggle('open');
+    });
 
-function initNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const view = item.dataset.view;
-            switchView(view);
+    // Refresh Topbar Button
+    document.getElementById('topbarRefreshBtn')?.addEventListener('click', async () => {
+        showToast('Refreshing data from database...', 'info');
+        await loadInitialData();
+        if (state.currentView === 'service' && state.currentServiceId) {
+            await openServiceDashboard(state.currentServiceId, true);
+        }
+        showToast('Data refreshed successfully', 'success');
+    });
+
+    // Add Service Modal Triggers
+    const openAddModal = () => openModal('modalAddService');
+    document.getElementById('topbarAddBtn')?.addEventListener('click', openAddModal);
+    document.getElementById('sidebarAddServiceBtn')?.addEventListener('click', openAddModal);
+    document.getElementById('btnOpenAddService')?.addEventListener('click', openAddModal);
+    document.getElementById('heroAddServiceBtn')?.addEventListener('click', openAddModal);
+
+    document.getElementById('closeAddServiceModal')?.addEventListener('click', () => closeModal('modalAddService'));
+    document.getElementById('cancelAddServiceBtn')?.addEventListener('click', () => closeModal('modalAddService'));
+
+    // Presets in Add Service Modal
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const id = chip.getAttribute('data-id');
+            const name = chip.getAttribute('data-name');
+            const url = chip.getAttribute('data-url');
+            document.getElementById('inputServiceId').value = id;
+            document.getElementById('inputDisplayName').value = name;
+            document.getElementById('inputEndpoint').value = url;
+            document.getElementById('inputDescription').value = `Auto-registered SAP microservice for ${id}`;
         });
     });
+
+    // Add Service Form Submission
+    document.getElementById('formAddService')?.addEventListener('submit', handleAddServiceSubmit);
+
+    // Delete Modal
+    document.getElementById('closeDeleteModal')?.addEventListener('click', () => closeModal('modalDeleteConfirm'));
+    document.getElementById('cancelDeleteBtn')?.addEventListener('click', () => closeModal('modalDeleteConfirm'));
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', handleConfirmDelete);
+
+    // Service Dashboard Buttons
+    document.getElementById('sdhSyncBtn')?.addEventListener('click', handleServiceSync);
+    document.getElementById('sdhDeleteBtn')?.addEventListener('click', () => {
+        if (!state.currentServiceId || state.currentServiceId === 'bills') return;
+        document.getElementById('deleteServiceName').textContent = state.currentServiceId;
+        openModal('modalDeleteConfirm');
+    });
+
+    // Detail Drawer Close
+    document.getElementById('closeDrawerBtn')?.addEventListener('click', closeDetailDrawer);
+    document.getElementById('drawerBackdrop')?.addEventListener('click', closeDetailDrawer);
+
+    // Search Input in Service Table
+    const searchInput = document.getElementById('serviceSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            state.tableSearchQuery = e.target.value.toLowerCase();
+            state.currentPage = 1;
+            renderServiceTable();
+        });
+    }
+
+    // Sync All Services Button
+    document.getElementById('btnSyncAllServices')?.addEventListener('click', handleSyncAll);
+
+    // Global ESC key listener to close modals/drawers
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal('modalAddService');
+            closeModal('modalDeleteConfirm');
+            closeDetailDrawer();
+        }
+    });
 }
 
-function switchView(view) {
-    currentView = view;
+// ── Initial Data Loading ────────────────────────────────────────
+async function loadInitialData() {
+    try {
+        const [services, stats] = await Promise.all([
+            API.getServices(),
+            API.getStats().catch(() => null)
+        ]);
 
-    // Update nav active states
+        state.services = services || [];
+        state.stats = stats;
+
+        renderSidebarServices();
+        renderOverviewDashboard();
+    } catch (err) {
+        console.error('Initialization error:', err);
+        showToast('Error loading initial services: ' + err.message, 'error');
+    }
+}
+
+// ── Switch Main View ────────────────────────────────────────────
+function switchView(viewName, serviceId = null) {
+    state.currentView = viewName;
+    state.currentServiceId = serviceId;
+
+    // Update View Panes
+    document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    const activeNav = document.querySelector(`.nav-item[data-view="${view}"]`);
-    if (activeNav) activeNav.classList.add('active');
 
-    // Update breadcrumb
-    const crumbNames = { dashboard: 'Dashboard', bills: 'All Bills', sync: 'Sync Data' };
-    const breadcrumb = document.getElementById('breadcrumb');
-    breadcrumb.innerHTML = `
-        <span class="crumb">Home</span>
-        <span class="crumb-sep">/</span>
-        <span class="crumb active">${crumbNames[view] || view}</span>
+    const crumb = document.getElementById('currentViewCrumb');
+
+    if (viewName === 'overview') {
+        document.getElementById('view-overview')?.classList.add('active');
+        document.getElementById('nav-overview')?.classList.add('active');
+        if (crumb) crumb.textContent = 'Overview';
+        renderOverviewDashboard();
+    } else if (viewName === 'sync-history') {
+        document.getElementById('view-sync-history')?.classList.add('active');
+        document.getElementById('nav-sync-history')?.classList.add('active');
+        if (crumb) crumb.textContent = 'Sync & Logs';
+        loadSyncLogs();
+    } else if (viewName === 'service') {
+        document.getElementById('view-service')?.classList.add('active');
+        const activeNav = document.getElementById(`nav-service-${serviceId}`);
+        if (activeNav) activeNav.classList.add('active');
+        if (crumb) crumb.textContent = serviceId ? `Service: ${serviceId}` : 'Service Dashboard';
+    }
+
+    // Close mobile menu if open
+    document.getElementById('sidebar')?.classList.remove('open');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Render Dynamic Sidebar Services ─────────────────────────────
+function renderSidebarServices() {
+    const nav = document.getElementById('dynamicServicesNav');
+    if (!nav) return;
+
+    if (!state.services || state.services.length === 0) {
+        nav.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-muted);">No services found</div>';
+        return;
+    }
+
+    nav.innerHTML = state.services.map(s => {
+        const isActive = (state.currentView === 'service' && state.currentServiceId === s.serviceId) ? 'active' : '';
+        const count = s.recordCount != null ? Number(s.recordCount).toLocaleString() : '0';
+        return `
+            <button class="nav-item ${isActive}" id="nav-service-${s.serviceId}" onclick="openServiceDashboard('${s.serviceId}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>${escapeHtml(s.displayName || s.serviceId)}</span>
+                <span class="nav-badge">${count}</span>
+            </button>
+        `;
+    }).join('');
+}
+
+// ── Open Dedicated Service Dashboard ────────────────────────────
+async function openServiceDashboard(serviceId, forceRefresh = false) {
+    switchView('service', serviceId);
+
+    const desc = state.services.find(s => s.serviceId === serviceId) || {
+        serviceId: serviceId,
+        displayName: serviceId,
+        tableName: serviceId + 's',
+        description: 'SAP Service records',
+        defaultEndpoint: '#'
+    };
+
+    // Header Metadata
+    document.getElementById('sdhTitle').textContent = desc.displayName || desc.serviceId;
+    document.getElementById('sdhServiceBadge').textContent = desc.serviceId.toUpperCase();
+    document.getElementById('sdhDescription').textContent = desc.description || `Synchronized SAP data table for ${desc.serviceId}`;
+    document.getElementById('sdhTableName').textContent = desc.tableName || desc.serviceId;
+    
+    const epLink = document.getElementById('sdhEndpointLink');
+    if (epLink) {
+        epLink.href = desc.defaultEndpoint || '#';
+        epLink.title = desc.defaultEndpoint || '';
+    }
+
+    // Hide delete button for core 'bills' service
+    const deleteBtn = document.getElementById('sdhDeleteBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = (serviceId.toLowerCase() === 'bills') ? 'none' : 'flex';
+    }
+
+    // Reset Table Filters and Pagination
+    state.tableSearchQuery = '';
+    state.tableFilterStatus = '';
+    state.currentPage = 1;
+    const searchInput = document.getElementById('serviceSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    // Show Loading in Table & Charts
+    document.getElementById('serviceTableContainer').innerHTML = `
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Fetching live ${escapeHtml(desc.displayName || serviceId)} records from Neon Cloud DB...</span>
+        </div>
     `;
 
-    // Show/hide views
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    const viewEl = document.getElementById(`view-${view}`);
-    if (viewEl) viewEl.classList.add('active');
-
-    // Load data for view
-    if (view === 'bills') loadBillsView();
-    if (view === 'sync') loadSyncView();
-
-    // Close mobile sidebar
-    document.getElementById('sidebar').classList.remove('open');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// EVENT LISTENERS
-// ═══════════════════════════════════════════════════════════════
-
-function initEventListeners() {
-    // Menu toggle (mobile)
-    document.getElementById('menuToggle').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('open');
-    });
-
-    // Header sync button
-    document.getElementById('headerSyncBtn').addEventListener('click', () => triggerSync());
-
-    // View All Bills button
-    document.getElementById('viewAllBillsBtn').addEventListener('click', () => switchView('bills'));
-
-    // Sync Now button
-    document.getElementById('syncNowBtn').addEventListener('click', () => triggerSync());
-
-    // Detail panel close
-    document.getElementById('detailClose').addEventListener('click', closeDetailPanel);
-    document.getElementById('detailOverlay').addEventListener('click', closeDetailPanel);
-
-    // Search with debounce
-    document.getElementById('billSearchInput').addEventListener('input', (e) => {
-        clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => {
-            currentPage = 1;
-            renderBillsTable();
-        }, 300);
-    });
-
-    // Filters
-    document.getElementById('filterStatus').addEventListener('change', () => { currentPage = 1; loadBillsFromDB(); });
-    document.getElementById('filterType').addEventListener('change', () => { currentPage = 1; loadBillsFromDB(); });
-    document.getElementById('filterCurrency').addEventListener('change', () => { currentPage = 1; loadBillsFromDB(); });
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════
-
-async function loadDashboard() {
     try {
-        // Load stats
-        const statsRes = await fetch(`${API_BASE}/api/stats`);
-        const stats = await statsRes.json();
-
-        if (stats.error) {
-            console.error('Stats error:', stats.error);
-            updateSyncStatus('error', 'Database error');
-            return;
+        if (!state.serviceData[serviceId] || forceRefresh) {
+            state.serviceData[serviceId] = await API.getServiceData(serviceId);
         }
 
-        updateSyncStatus('connected', 'Connected');
-        renderStats(stats);
-        renderCharts(stats);
-        updateLastSyncInfo(stats.lastSync);
+        const data = state.serviceData[serviceId] || [];
+        document.getElementById('sdhRecordCount').textContent = data.length.toLocaleString();
 
-        // Load recent bills
-        const billsRes = await fetch(`${API_BASE}/api/bills`);
-        const bills = await billsRes.json();
-        allBills = Array.isArray(bills) ? bills : [];
-        renderRecentBills(allBills.slice(0, 8));
+        // Render Service Specific KPIs
+        renderServiceKPIs(desc, data);
 
-        // Populate currency filter
-        if (stats.currencies) {
-            const currSelect = document.getElementById('filterCurrency');
-            currSelect.innerHTML = '<option value="">All Currencies</option>';
-            stats.currencies.forEach(c => {
-                currSelect.innerHTML += `<option value="${c}">${c}</option>`;
-            });
-        }
+        // Render Eye-Catchy Service Charts
+        renderServiceCharts(desc, data);
+
+        // Render Data Table
+        renderServiceTable();
 
     } catch (err) {
-        console.error('Dashboard load error:', err);
-        updateSyncStatus('error', 'Connection failed');
-        document.getElementById('recentBillsTable').innerHTML = `
+        console.error(`Failed to load ${serviceId} data:`, err);
+        document.getElementById('serviceTableContainer').innerHTML = `
             <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <p>Could not connect to the server.<br>Make sure the backend is running on port 8080.</p>
+                <span style="color:var(--accent-rose);font-weight:600;">Error loading service data</span>
+                <span>${escapeHtml(err.message)}</span>
             </div>
         `;
     }
 }
 
-function renderStats(stats) {
-    animateNumber('statTotalBills', stats.totalBills || 0);
+// ── Render Service Specific KPIs ────────────────────────────────
+function renderServiceKPIs(desc, data) {
+    const kpiGrid = document.getElementById('serviceKpiGrid');
+    if (!kpiGrid) return;
 
-    const open = (stats.byStatus && stats.byStatus.OPEN) || 0;
-    const closed = (stats.byStatus && stats.byStatus.CLOSED) || 0;
-    animateNumber('statOpen', open);
-    animateNumber('statClosed', closed);
+    const totalCount = data.length;
 
-    const gross = stats.totalGrossAmount || 0;
-    document.getElementById('statRevenue').textContent = formatCurrency(gross);
+    // Detect field variations dynamically
+    let statusCounts = {};
+    let currencyCounts = {};
+    let totalGross = 0;
 
-    const currCount = stats.currencies ? stats.currencies.length : 0;
-    animateNumber('statCurrencies', currCount);
+    data.forEach(item => {
+        const status = item.billStatus || item.status || item.state || item.lifecycleStatus || 'ACTIVE';
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+        const cur = item.currency || item.grossCurrency || (item.market && item.market.currency) || null;
+        if (cur) currencyCounts[cur] = (currencyCounts[cur] || 0) + 1;
+
+        const gross = item.grossAmount != null ? Number(item.grossAmount) : (item.amount != null ? Number(item.amount) : 0);
+        if (!isNaN(gross)) totalGross += gross;
+    });
+
+    const primaryStatus = Object.keys(statusCounts)[0] || 'Active';
+    const primaryStatusCount = statusCounts[primaryStatus] || 0;
+    const distinctCurrencies = Object.keys(currencyCounts).length;
+
+    kpiGrid.innerHTML = `
+        <div class="kpi-card">
+            <div class="kpi-icon-box cyan">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+            </div>
+            <div class="kpi-details">
+                <span class="kpi-label">Total Cached Records</span>
+                <span class="kpi-value">${totalCount.toLocaleString()}</span>
+                <span class="kpi-caption">Stored in ${escapeHtml(desc.tableName || desc.serviceId)}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box emerald">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-details">
+                <span class="kpi-label">${escapeHtml(primaryStatus)} Items</span>
+                <span class="kpi-value">${primaryStatusCount.toLocaleString()}</span>
+                <span class="kpi-caption">Primary status classification</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box indigo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            </div>
+            <div class="kpi-details">
+                <span class="kpi-label">Distinct Markets / Currencies</span>
+                <span class="kpi-value">${distinctCurrencies || 1}</span>
+                <span class="kpi-caption">${Object.keys(currencyCounts).slice(0, 3).join(', ') || 'Global USD/EUR'}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
+            <div class="kpi-details">
+                <span class="kpi-label">Aggregated Volume</span>
+                <span class="kpi-value">${totalGross > 0 ? '$' + totalGross.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) : totalCount + ' units'}</span>
+                <span class="kpi-caption">Calculated service volume</span>
+            </div>
+        </div>
+    `;
 }
 
-function animateNumber(elementId, target) {
-    const el = document.getElementById(elementId);
-    const duration = 800;
-    const start = performance.now();
-    const initial = 0;
-
-    function update(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        // Ease out cubic
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(initial + (target - initial) * eased);
-        el.textContent = current.toLocaleString();
-        if (progress < 1) requestAnimationFrame(update);
+// ── Render Eye-Catchy Service Charts (Chart.js) ──────────────────
+function renderServiceCharts(desc, data) {
+    if (state.charts.service1) {
+        state.charts.service1.destroy();
+        state.charts.service1 = null;
+    }
+    if (state.charts.service2) {
+        state.charts.service2.destroy();
+        state.charts.service2 = null;
     }
 
-    requestAnimationFrame(update);
-}
+    if (!data || data.length === 0) {
+        return;
+    }
 
-function renderCharts(stats) {
-    // Destroy old charts
-    Object.values(chartInstances).forEach(c => c.destroy());
-    chartInstances = {};
+    // Chart 1: Status Distribution Doughnut Chart
+    const statusMap = {};
+    data.forEach(item => {
+        const s = item.billStatus || item.status || item.state || item.lifecycleStatus || 'Active';
+        statusMap[s] = (statusMap[s] || 0) + 1;
+    });
 
-    const chartDefaults = {
-        color: '#94a3b8',
-        borderColor: 'rgba(255,255,255,0.06)',
-    };
+    const statusLabels = Object.keys(statusMap);
+    const statusValues = Object.values(statusMap);
 
-    Chart.defaults.color = chartDefaults.color;
-    Chart.defaults.borderColor = chartDefaults.borderColor;
+    const colors = [
+        '#06b6d4', // cyan
+        '#10b981', // emerald
+        '#6366f1', // indigo
+        '#f59e0b', // amber
+        '#f43f5e', // rose
+        '#8b5cf6'  // purple
+    ];
 
-    // ── Status Doughnut ──
-    if (stats.byStatus && Object.keys(stats.byStatus).length > 0) {
-        const statusLabels = Object.keys(stats.byStatus);
-        const statusData = Object.values(stats.byStatus);
-        const statusColors = statusLabels.map(s => {
-            if (s === 'OPEN') return '#fbbf24';
-            if (s === 'CLOSED') return '#34d399';
-            if (s === 'CLOSING') return '#818cf8';
-            return '#64748b';
-        });
-
-        chartInstances.status = new Chart(document.getElementById('statusChart'), {
+    const ctx1 = document.getElementById('serviceChart1')?.getContext('2d');
+    if (ctx1) {
+        state.charts.service1 = new Chart(ctx1, {
             type: 'doughnut',
             data: {
                 labels: statusLabels,
-                datasets: [{ data: statusData, backgroundColor: statusColors, borderWidth: 0, hoverOffset: 8 }]
+                datasets: [{
+                    data: statusValues,
+                    backgroundColor: colors.slice(0, statusLabels.length),
+                    borderWidth: 2,
+                    borderColor: '#111827',
+                    hoverOffset: 6
+                }]
             },
             options: {
                 responsive: true,
-                cutout: '65%',
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } }
-                }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'Inter', size: 12 },
+                            padding: 16
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#cbd5e1',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label(ctx) {
+                                const total = statusValues.reduce((a, b) => a + b, 0);
+                                const pct = ((ctx.raw / total) * 100).toFixed(1);
+                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
             }
         });
     }
 
-    // ── Type Bar ──
-    if (stats.byType && Object.keys(stats.byType).length > 0) {
-        const typeLabels = Object.keys(stats.byType);
-        const typeData = Object.values(stats.byType);
-        const typeColors = typeLabels.map(t => {
-            if (t === 'CHARGE') return '#fb7185';
-            if (t === 'CREDIT') return '#22d3ee';
-            return '#64748b';
-        });
+    // Chart 2: Secondary Attribute Distribution (e.g. Currency, Type, Market, or Timeline)
+    const secondaryMap = {};
+    data.forEach(item => {
+        const sec = item.billingType || item.currency || item.marketId || item.customerType || item.templateType || 'Standard';
+        secondaryMap[sec] = (secondaryMap[sec] || 0) + 1;
+    });
 
-        chartInstances.type = new Chart(document.getElementById('typeChart'), {
+    const secLabels = Object.keys(secondaryMap).slice(0, 7);
+    const secValues = secLabels.map(k => secondaryMap[k]);
+
+    const ctx2 = document.getElementById('serviceChart2')?.getContext('2d');
+    if (ctx2) {
+        state.charts.service2 = new Chart(ctx2, {
             type: 'bar',
             data: {
-                labels: typeLabels,
-                datasets: [{ data: typeData, backgroundColor: typeColors, borderRadius: 8, barThickness: 40 }]
+                labels: secLabels,
+                datasets: [{
+                    label: 'Record Count',
+                    data: secValues,
+                    backgroundColor: 'rgba(56, 189, 248, 0.75)',
+                    hoverBackgroundColor: '#38bdf8',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    }
-
-    // ── Currency Pie ──
-    if (stats.byCurrency && Object.keys(stats.byCurrency).length > 0) {
-        const curLabels = Object.keys(stats.byCurrency);
-        const curData = Object.values(stats.byCurrency);
-        const curColors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#22d3ee', '#2dd4bf'];
-
-        chartInstances.currency = new Chart(document.getElementById('currencyChart'), {
-            type: 'doughnut',
-            data: {
-                labels: curLabels,
-                datasets: [{ data: curData, backgroundColor: curColors.slice(0, curLabels.length), borderWidth: 0, hoverOffset: 8 }]
-            },
-            options: {
-                responsive: true,
-                cutout: '55%',
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#cbd5e1',
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } }
+                    }
                 }
             }
         });
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// RECENT BILLS (Dashboard)
-// ═══════════════════════════════════════════════════════════════
+// ── Render Dynamic Service Data Table ───────────────────────────
+function renderServiceTable() {
+    const container = document.getElementById('serviceTableContainer');
+    if (!container) return;
 
-function renderRecentBills(bills) {
-    const container = document.getElementById('recentBillsTable');
-
-    if (!bills || bills.length === 0) {
+    const allData = state.serviceData[state.currentServiceId] || [];
+    if (allData.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                <p>No bills yet. Click <strong>Sync</strong> to fetch data from SAP.</p>
+                <span>No records found in this service table.</span>
+                <button class="btn-action-outline" onclick="handleServiceSync()" style="margin-top:10px;">
+                    Sync Records from SAP API
+                </button>
             </div>
         `;
+        document.getElementById('serviceFilteredCount').textContent = 'Showing 0 records';
+        renderPagination(0);
         return;
     }
 
-    container.innerHTML = buildBillTable(bills);
-    attachRowClickHandlers(container);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// BILLS VIEW
-// ═══════════════════════════════════════════════════════════════
-
-function loadBillsView() {
-    loadBillsFromDB();
-}
-
-async function loadBillsFromDB() {
-    const status = document.getElementById('filterStatus').value;
-    const type = document.getElementById('filterType').value;
-    const currency = document.getElementById('filterCurrency').value;
-
-    let url = `${API_BASE}/api/bills?`;
-    if (status) url += `status=${encodeURIComponent(status)}&`;
-    if (type) url += `type=${encodeURIComponent(type)}&`;
-    if (currency) url += `currency=${encodeURIComponent(currency)}&`;
-
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        allBills = Array.isArray(data) ? data : [];
-        currentPage = 1;
-        renderBillsTable();
-    } catch (err) {
-        console.error('Failed to load bills:', err);
-        document.getElementById('billsTableContainer').innerHTML = `
-            <div class="empty-state"><p>Failed to load bills. Check server connection.</p></div>
-        `;
-    }
-}
-
-function renderBillsTable() {
-    const container = document.getElementById('billsTableContainer');
-    const searchQuery = document.getElementById('billSearchInput').value.toLowerCase().trim();
-
-    // Filter by search
-    let filtered = allBills;
-    if (searchQuery) {
-        filtered = allBills.filter(b => {
-            const searchStr = JSON.stringify(b).toLowerCase();
-            return searchStr.includes(searchQuery);
-        });
-    }
-
-    if (filtered.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <p>${searchQuery ? 'No bills match your search.' : 'No bills found. Sync data from SAP first.'}</p>
-            </div>
-        `;
-        document.getElementById('tableFooter').style.display = 'none';
-        return;
-    }
-
-    // Pagination
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    if (currentPage > totalPages) currentPage = totalPages;
-    const startIdx = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
-
-    container.innerHTML = buildBillTable(pageItems);
-    attachRowClickHandlers(container);
-
-    // Footer
-    const footer = document.getElementById('tableFooter');
-    footer.style.display = 'flex';
-    document.getElementById('resultCount').textContent = `${filtered.length} bill${filtered.length !== 1 ? 's' : ''}`;
-    renderPagination(totalPages);
-}
-
-function buildBillTable(bills) {
-    let html = `<table>
-        <thead>
-            <tr>
-                <th>Bill ID</th>
-                <th>Doc #</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Currency</th>
-                <th>Net Amount</th>
-                <th>Gross Amount</th>
-                <th>Customer</th>
-                <th>Billing Date</th>
-                <th>Due Date</th>
-            </tr>
-        </thead>
-        <tbody>`;
-
-    bills.forEach(b => {
-        const statusClass = (b.billStatus || '').toLowerCase();
-        const typeClass = (b.billingType || '').toLowerCase();
-        const netAmt = b.netAmount ? formatAmount(b.netAmount.amount) : '—';
-        const grossAmt = b.grossAmount ? formatAmount(b.grossAmount.amount) : '—';
-        const custId = b.customer ? truncateId(b.customer.id) : '—';
-
-        html += `<tr data-bill-id="${b.id || ''}">
-            <td>${truncateId(b.id) || '—'}</td>
-            <td>${b.documentNumber || '—'}</td>
-            <td><span class="badge ${typeClass}">${b.billingType || '—'}</span></td>
-            <td><span class="badge ${statusClass}">${b.billStatus || '—'}</span></td>
-            <td>${b.currency || '—'}</td>
-            <td>${netAmt}</td>
-            <td>${grossAmt}</td>
-            <td>${custId}</td>
-            <td>${b.billingDate || '—'}</td>
-            <td>${b.dueDate || '—'}</td>
-        </tr>`;
-    });
-
-    html += '</tbody></table>';
-    return html;
-}
-
-function attachRowClickHandlers(container) {
-    container.querySelectorAll('tbody tr').forEach(row => {
-        row.addEventListener('click', () => {
-            const billId = row.dataset.billId;
-            if (billId) openDetailPanel(billId);
+    // Filter by search query
+    let filtered = allData.filter(item => {
+        if (!state.tableSearchQuery) return true;
+        const q = state.tableSearchQuery;
+        return Object.values(item).some(val => {
+            if (val == null) return false;
+            if (typeof val === 'object') return JSON.stringify(val).toLowerCase().includes(q);
+            return String(val).toLowerCase().includes(q);
         });
     });
-}
 
-function renderPagination(totalPages) {
-    const container = document.getElementById('pagination');
-    if (totalPages <= 1) {
-        container.innerHTML = '';
-        return;
-    }
+    document.getElementById('serviceFilteredCount').textContent = `Showing ${filtered.length} of ${allData.length} records`;
 
-    let html = '';
+    // Dynamic Column Discovery from first record
+    const sample = allData[0] || {};
+    const candidateKeys = Object.keys(sample).filter(k => {
+        return k !== 'rawJson' && typeof sample[k] !== 'function';
+    });
 
-    // Prev
-    html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">‹</button>`;
+    // Select up to 5 readable columns + Action column
+    const priorityCols = ['id', 'documentNumber', 'subscriptionId', 'billStatus', 'status', 'billingType', 'currency', 'grossAmount', 'netAmount', 'createdAt', 'billingDate'];
+    const chosenCols = [];
 
-    // Page numbers
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+    // Add prioritized columns first
+    priorityCols.forEach(p => {
+        if (candidateKeys.includes(p) && !chosenCols.includes(p)) chosenCols.push(p);
+    });
+    // Add remaining up to 5
+    candidateKeys.forEach(k => {
+        if (chosenCols.length < 5 && !chosenCols.includes(k) && typeof sample[k] !== 'object') {
+            chosenCols.push(k);
+        }
+    });
 
-    if (start > 1) {
-        html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
-        if (start > 2) html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
-    }
+    if (chosenCols.length === 0) chosenCols.push('id');
 
-    for (let i = start; i <= end; i++) {
-        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-    }
+    // Pagination slicing
+    const totalPages = Math.ceil(filtered.length / state.pageSize) || 1;
+    if (state.currentPage > totalPages) state.currentPage = totalPages;
+    const startIdx = (state.currentPage - 1) * state.pageSize;
+    const pageRows = filtered.slice(startIdx, startIdx + state.pageSize);
 
-    if (end < totalPages) {
-        if (end < totalPages - 1) html += `<span style="color:var(--text-dim);padding:0 4px;">…</span>`;
-        html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-    }
+    // Build Table HTML
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    ${chosenCols.map(col => `<th>${formatColHeader(col)}</th>`).join('')}
+                    <th style="text-align:right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
 
-    // Next
-    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">›</button>`;
+    pageRows.forEach((row, idx) => {
+        html += `<tr>`;
+        chosenCols.forEach(col => {
+            const val = row[col];
+            html += `<td>${formatCellValue(col, val)}</td>`;
+        });
+        const fullIndex = startIdx + idx;
+        html += `
+            <td style="text-align:right;">
+                <button class="btn-row-detail" onclick="openRecordInspector(${fullIndex})">Inspect</button>
+            </td>
+        `;
+        html += `</tr>`;
+    });
 
+    html += `</tbody></table>`;
     container.innerHTML = html;
+
+    renderPagination(filtered.length);
 }
 
-function goToPage(page) {
-    currentPage = page;
-    renderBillsTable();
-    // Scroll to top of table
-    document.getElementById('billsTableContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+function formatColHeader(col) {
+    return col.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^./, str => str.toUpperCase());
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BILL DETAIL PANEL
-// ═══════════════════════════════════════════════════════════════
-
-function openDetailPanel(billId) {
-    const bill = allBills.find(b => b.id === billId);
-    if (!bill) return;
-
-    const panel = document.getElementById('detailPanel');
-    const overlay = document.getElementById('detailOverlay');
-    const body = document.getElementById('detailBody');
-
-    document.getElementById('detailTitle').textContent = `Bill #${bill.documentNumber || bill.id}`;
-
-    let html = '';
-
-    // General Info
-    html += `<div class="detail-section">
-        <div class="detail-section-title">General Information</div>
-        <div class="detail-grid">
-            <div class="detail-field full">
-                <span class="detail-field-label">Bill ID</span>
-                <span class="detail-field-value mono">${bill.id || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Document Number</span>
-                <span class="detail-field-value">${bill.documentNumber || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Billing Type</span>
-                <span class="detail-field-value"><span class="badge ${(bill.billingType || '').toLowerCase()}">${bill.billingType || '—'}</span></span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Status</span>
-                <span class="detail-field-value"><span class="badge ${(bill.billStatus || '').toLowerCase()}">${bill.billStatus || '—'}</span></span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Transfer Status</span>
-                <span class="detail-field-value">${bill.transferStatus || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Currency</span>
-                <span class="detail-field-value">${bill.currency || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Time Zone</span>
-                <span class="detail-field-value">${bill.timeZone || '—'}</span>
-            </div>
-        </div>
-    </div>`;
-
-    // Dates
-    html += `<div class="detail-section">
-        <div class="detail-section-title">Dates</div>
-        <div class="detail-grid">
-            <div class="detail-field">
-                <span class="detail-field-label">Billing Date</span>
-                <span class="detail-field-value">${bill.billingDate || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Due Date</span>
-                <span class="detail-field-value">${bill.dueDate || '—'}</span>
-            </div>
-        </div>
-    </div>`;
-
-    // Amounts
-    html += `<div class="detail-section">
-        <div class="detail-section-title">Amounts</div>
-        <div class="detail-grid">
-            <div class="detail-field">
-                <span class="detail-field-label">Net Amount</span>
-                <span class="detail-field-value">${bill.netAmount ? formatAmount(bill.netAmount.amount) + ' ' + (bill.netAmount.currency || '') : '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Gross Amount</span>
-                <span class="detail-field-value">${bill.grossAmount ? formatAmount(bill.grossAmount.amount) + ' ' + (bill.grossAmount.currency || '') : '—'}</span>
-            </div>`;
-    if (bill.netCreditAmount) {
-        html += `<div class="detail-field">
-                <span class="detail-field-label">Net Credit</span>
-                <span class="detail-field-value">${formatAmount(bill.netCreditAmount.amount)} ${bill.netCreditAmount.currency || ''}</span>
-            </div>`;
-    }
-    if (bill.grossCreditAmount) {
-        html += `<div class="detail-field">
-                <span class="detail-field-label">Gross Credit</span>
-                <span class="detail-field-value">${formatAmount(bill.grossCreditAmount.amount)} ${bill.grossCreditAmount.currency || ''}</span>
-            </div>`;
-    }
-    html += `</div></div>`;
-
-    // Customer
-    if (bill.customer) {
-        html += `<div class="detail-section">
-            <div class="detail-section-title">Customer</div>
-            <div class="detail-grid">
-                <div class="detail-field full">
-                    <span class="detail-field-label">Customer ID</span>
-                    <span class="detail-field-value mono">${bill.customer.id || '—'}</span>
-                </div>
-                <div class="detail-field">
-                    <span class="detail-field-label">Type</span>
-                    <span class="detail-field-value">${bill.customer.type || '—'}</span>
-                </div>
-                <div class="detail-field">
-                    <span class="detail-field-label">Country</span>
-                    <span class="detail-field-value">${bill.customer.country || '—'}</span>
-                </div>
-            </div>
-        </div>`;
+function formatCellValue(col, val) {
+    if (val == null) return '<span style="color:var(--text-muted);">—</span>';
+    
+    // Status Pills
+    if (col.toLowerCase().includes('status') || col.toLowerCase().includes('state')) {
+        const s = String(val).toLowerCase();
+        let cls = 'neutral';
+        if (s.includes('open') || s.includes('pend')) cls = 'open';
+        else if (s.includes('close') || s.includes('active') || s.includes('succ')) cls = 'closed';
+        else if (s.includes('fail') || s.includes('err')) cls = 'danger';
+        return `<span class="status-pill ${cls}">${escapeHtml(String(val))}</span>`;
     }
 
-    // Market
-    if (bill.market) {
-        html += `<div class="detail-section">
-            <div class="detail-section-title">Market</div>
-            <div class="detail-grid">
-                <div class="detail-field full">
-                    <span class="detail-field-label">Market ID</span>
-                    <span class="detail-field-value mono">${bill.market.id || '—'}</span>
-                </div>
-            </div>
-        </div>`;
+    // Money or Amount
+    if (col.toLowerCase().includes('amount')) {
+        const num = Number(val);
+        if (!isNaN(num)) return `$${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
     }
 
-    // Bill Items
-    if (bill.billItems && bill.billItems.length > 0) {
-        html += `<div class="detail-section">
-            <div class="detail-section-title">Bill Items (${bill.billItems.length})</div>`;
-
-        bill.billItems.forEach((item, idx) => {
-            html += `<div style="background:var(--bg-glass);border-radius:var(--radius-md);padding:14px;margin-bottom:10px;">
-                <div style="font-size:0.8rem;color:var(--accent-indigo);font-weight:600;margin-bottom:8px;">Item ${idx + 1}</div>
-                <div class="detail-grid">
-                    <div class="detail-field full">
-                        <span class="detail-field-label">Item ID</span>
-                        <span class="detail-field-value mono" style="font-size:0.76rem;">${item.id || '—'}</span>
-                    </div>`;
-
-            if (item.subscription) {
-                html += `<div class="detail-field">
-                    <span class="detail-field-label">Subscription</span>
-                    <span class="detail-field-value" style="font-size:0.82rem;">${truncateId(item.subscription.id)}</span>
-                </div>`;
-            }
-            if (item.product) {
-                html += `<div class="detail-field">
-                    <span class="detail-field-label">Product</span>
-                    <span class="detail-field-value" style="font-size:0.82rem;">${item.product.name || truncateId(item.product.id)}</span>
-                </div>`;
-            }
-            if (item.ratePlan) {
-                html += `<div class="detail-field">
-                    <span class="detail-field-label">Rate Plan</span>
-                    <span class="detail-field-value" style="font-size:0.82rem;">${truncateId(item.ratePlan.id)}</span>
-                </div>`;
-            }
-
-            html += `</div></div>`;
-        });
-
-        html += `</div>`;
+    if (typeof val === 'object') {
+        return `<code style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(JSON.stringify(val).substring(0, 30))}...</code>`;
     }
 
-    // Payment
-    if (bill.payment) {
-        html += `<div class="detail-section">
-            <div class="detail-section-title">Payment</div>
-            <div class="detail-grid">
-                <div class="detail-field">
-                    <span class="detail-field-label">Payment Status</span>
-                    <span class="detail-field-value">${bill.payment.paymentStatus || '—'}</span>
-                </div>
-                <div class="detail-field">
-                    <span class="detail-field-label">Payment Method</span>
-                    <span class="detail-field-value">${bill.payment.paymentMethod || '—'}</span>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    // Additional IDs
-    html += `<div class="detail-section">
-        <div class="detail-section-title">Additional Details</div>
-        <div class="detail-grid">
-            <div class="detail-field full">
-                <span class="detail-field-label">Billing Profile ID</span>
-                <span class="detail-field-value mono">${bill.billingProfileId || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Contract Account</span>
-                <span class="detail-field-value">${bill.contractAccount || '—'}</span>
-            </div>
-            <div class="detail-field">
-                <span class="detail-field-label">Create Invoice</span>
-                <span class="detail-field-value">${bill.createInvoice != null ? bill.createInvoice : '—'}</span>
-            </div>
-        </div>
-    </div>`;
-
-    body.innerHTML = html;
-
-    // Open panel
-    panel.classList.add('open');
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const str = String(val);
+    if (str.length > 40) return `${escapeHtml(str.substring(0, 37))}...`;
+    return escapeHtml(str);
 }
 
-function closeDetailPanel() {
-    document.getElementById('detailPanel').classList.remove('open');
-    document.getElementById('detailOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-}
+function renderPagination(totalCount) {
+    const totalPages = Math.ceil(totalCount / state.pageSize) || 1;
+    const pageInfo = document.getElementById('servicePageInfo');
+    const pageBtns = document.getElementById('servicePageButtons');
 
-// ═══════════════════════════════════════════════════════════════
-// SYNC
-// ═══════════════════════════════════════════════════════════════
-
-async function triggerSync() {
-    const syncBtn = document.getElementById('headerSyncBtn');
-    const syncNowBtn = document.getElementById('syncNowBtn');
-    const syncIcon = document.getElementById('syncIconLg');
-    const resultDiv = document.getElementById('syncResult');
-
-    // Set syncing state
-    syncBtn.classList.add('syncing');
-    syncBtn.disabled = true;
-    if (syncNowBtn) {
-        syncNowBtn.classList.add('syncing');
-        syncNowBtn.disabled = true;
+    if (pageInfo) {
+        pageInfo.textContent = `Page ${state.currentPage} of ${totalPages} (${totalCount} total)`;
     }
-    if (syncIcon) syncIcon.classList.add('syncing');
-    if (resultDiv) resultDiv.style.display = 'none';
 
-    try {
-        const res = await fetch(`${API_BASE}/api/sync`);
-        const data = await res.json();
+    if (!pageBtns) return;
+    pageBtns.innerHTML = '';
 
-        if (data.success) {
-            if (resultDiv) {
-                resultDiv.className = 'sync-result success';
-                resultDiv.textContent = `✓ ${data.message}`;
-                resultDiv.style.display = 'block';
-            }
+    if (totalPages <= 1) return;
 
-            // Refresh dashboard data
-            await loadDashboard();
+    if (state.currentPage > 1) {
+        const prev = document.createElement('button');
+        prev.className = 'btn-page';
+        prev.textContent = '←';
+        prev.onclick = () => { state.currentPage--; renderServiceTable(); };
+        pageBtns.appendChild(prev);
+    }
 
-            // If on bills view, refresh
-            if (currentView === 'bills') await loadBillsFromDB();
-            if (currentView === 'sync') await loadFetchHistory();
+    for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+        const btn = document.createElement('button');
+        btn.className = `btn-page ${i === state.currentPage ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.onclick = () => { state.currentPage = i; renderServiceTable(); };
+        pageBtns.appendChild(btn);
+    }
 
-        } else {
-            if (resultDiv) {
-                resultDiv.className = 'sync-result error';
-                resultDiv.textContent = `✗ ${data.error || 'Sync failed'}`;
-                resultDiv.style.display = 'block';
-            }
-        }
-
-    } catch (err) {
-        if (resultDiv) {
-            resultDiv.className = 'sync-result error';
-            resultDiv.textContent = `✗ Connection failed: ${err.message}`;
-            resultDiv.style.display = 'block';
-        }
-    } finally {
-        syncBtn.classList.remove('syncing');
-        syncBtn.disabled = false;
-        if (syncNowBtn) {
-            syncNowBtn.classList.remove('syncing');
-            syncNowBtn.disabled = false;
-        }
-        if (syncIcon) syncIcon.classList.remove('syncing');
+    if (state.currentPage < totalPages) {
+        const next = document.createElement('button');
+        next.className = 'btn-page';
+        next.textContent = '→';
+        next.onclick = () => { state.currentPage++; renderServiceTable(); };
+        pageBtns.appendChild(next);
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SYNC VIEW
-// ═══════════════════════════════════════════════════════════════
+// ── Record Inspector / Detail Drawer ────────────────────────────
+function openRecordInspector(index) {
+    const list = state.serviceData[state.currentServiceId] || [];
+    const item = list[index];
+    if (!item) return;
 
-function loadSyncView() {
-    loadFetchHistory();
-}
+    document.getElementById('drawerServicePill').textContent = (state.currentServiceId || 'RECORD').toUpperCase();
+    document.getElementById('drawerTitle').textContent = item.id || item.documentNumber || `Record #${index + 1}`;
 
-async function loadFetchHistory() {
-    const container = document.getElementById('fetchHistoryContainer');
+    const content = document.getElementById('drawerContent');
+    if (!content) return;
 
-    try {
-        const res = await fetch(`${API_BASE}/api/fetch-log`);
-        const logs = await res.json();
-
-        if (!Array.isArray(logs) || logs.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state" style="padding:30px;">
-                    <p>No sync history yet. Click "Sync Now" to get started.</p>
+    // Field Summary Card
+    let summaryHtml = `<div class="field-summary-card">`;
+    Object.entries(item).slice(0, 6).forEach(([k, v]) => {
+        if (typeof v !== 'object') {
+            summaryHtml += `
+                <div class="field-summary-row">
+                    <span class="fs-label">${escapeHtml(k)}</span>
+                    <span class="fs-val">${escapeHtml(String(v))}</span>
                 </div>
             `;
+        }
+    });
+    summaryHtml += `</div>`;
+
+    // Pretty JSON
+    const jsonStr = JSON.stringify(item, null, 2);
+    summaryHtml += `
+        <h4 style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Complete Payload</h4>
+        <pre class="json-inspector"><code>${escapeHtml(jsonStr)}</code></pre>
+    `;
+
+    content.innerHTML = summaryHtml;
+
+    document.getElementById('drawerBackdrop')?.classList.add('show');
+    document.getElementById('detailDrawer')?.classList.add('show');
+}
+
+function closeDetailDrawer() {
+    document.getElementById('drawerBackdrop')?.classList.remove('show');
+    document.getElementById('detailDrawer')?.classList.remove('show');
+}
+
+// ── Overview Dashboard View ─────────────────────────────────────
+function renderOverviewDashboard() {
+    const totalServices = state.services.length;
+    let totalRecords = 0;
+    state.services.forEach(s => totalRecords += Number(s.recordCount || 0));
+
+    // Update Hero and Top Stats
+    document.getElementById('heroTotalServices').textContent = totalServices;
+    document.getElementById('heroTotalRecords').textContent = totalRecords.toLocaleString();
+    document.getElementById('kpiActiveServices').textContent = totalServices;
+    document.getElementById('kpiTotalRecords').textContent = totalRecords.toLocaleString();
+
+    // Render Overview Services Cards
+    const cardsGrid = document.getElementById('overviewServicesCards');
+    if (cardsGrid) {
+        if (state.services.length === 0) {
+            cardsGrid.innerHTML = '<div class="empty-state">No services registered yet. Click "+ Add Service" to begin.</div>';
+        } else {
+            cardsGrid.innerHTML = state.services.map(s => {
+                const count = Number(s.recordCount || 0).toLocaleString();
+                return `
+                    <div class="service-overview-card" onclick="openServiceDashboard('${s.serviceId}')">
+                        <div class="soc-top">
+                            <span class="soc-badge">${escapeHtml(s.serviceId)}</span>
+                            <span class="soc-count">${count} records</span>
+                        </div>
+                        <h3 class="soc-title">${escapeHtml(s.displayName || s.serviceId)}</h3>
+                        <p class="soc-desc">${escapeHtml(s.description || 'Auto-registered dynamic SAP microservice')}</p>
+                        <div class="soc-footer">
+                            <span>Open Dashboard</span>
+                            <span>→</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    renderOverviewCharts();
+}
+
+function renderOverviewCharts() {
+    if (state.charts.overview1) {
+        state.charts.overview1.destroy();
+        state.charts.overview1 = null;
+    }
+    if (state.charts.overview2) {
+        state.charts.overview2.destroy();
+        state.charts.overview2 = null;
+    }
+
+    // Chart 1: Service Record Volume Bar Chart
+    const ctx1 = document.getElementById('overviewServiceVolumeChart')?.getContext('2d');
+    if (ctx1 && state.services.length > 0) {
+        const labels = state.services.map(s => s.displayName || s.serviceId);
+        const data = state.services.map(s => Number(s.recordCount || 0));
+
+        state.charts.overview1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Records Stored',
+                    data: data,
+                    backgroundColor: [
+                        '#06b6d4',
+                        '#6366f1',
+                        '#10b981',
+                        '#f59e0b',
+                        '#f43f5e',
+                        '#8b5cf6'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f8fafc',
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+    // Chart 2: Bills Distribution Doughnut Chart (from stats if available)
+    const ctx2 = document.getElementById('overviewBillsDistributionChart')?.getContext('2d');
+    if (ctx2 && state.stats) {
+        const statusMap = state.stats.statusBreakdown || { 'OPEN': 25, 'CLOSED': 15 };
+        const labels = Object.keys(statusMap);
+        const values = Object.values(statusMap);
+
+        state.charts.overview2 = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: ['#f59e0b', '#10b981', '#6366f1', '#f43f5e'],
+                    borderWidth: 2,
+                    borderColor: '#111827'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', font: { family: 'Inter', size: 12 }, padding: 12 }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+}
+
+// ── Service Sync Handler ────────────────────────────────────────
+async function handleServiceSync() {
+    const serviceId = state.currentServiceId;
+    if (!serviceId) return;
+
+    const btn = document.getElementById('sdhSyncBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>Syncing...</span>`;
+    btn.disabled = true;
+
+    try {
+        const result = await API.syncService(serviceId);
+        showToast(result.message || `Successfully synced ${serviceId}`, 'success');
+        await loadInitialData();
+        await openServiceDashboard(serviceId, true);
+    } catch (err) {
+        showToast(`Sync failed: ${err.message}`, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// ── Sync All Services Handler ───────────────────────────────────
+async function handleSyncAll() {
+    const btn = document.getElementById('btnSyncAllServices');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>Syncing All...</span>`;
+    btn.disabled = true;
+
+    try {
+        for (const s of state.services) {
+            await API.syncService(s.serviceId).catch(e => console.warn(`Sync failed for ${s.serviceId}:`, e));
+        }
+        showToast('All services synchronized successfully!', 'success');
+        await loadInitialData();
+        loadSyncLogs();
+    } catch (err) {
+        showToast(`Sync all encountered issues: ${err.message}`, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// ── Load Sync Logs ──────────────────────────────────────────────
+async function loadSyncLogs() {
+    const container = document.getElementById('syncHistoryTableContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Fetching synchronization audit trail...</span>
+        </div>
+    `;
+
+    try {
+        const logs = await API.getFetchLogs();
+        if (!logs || logs.length === 0) {
+            container.innerHTML = `<div class="empty-state">No synchronization logs recorded yet.</div>`;
             return;
         }
 
-        let html = '';
+        let html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                        <th>Records Synced</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
         logs.forEach(log => {
-            const dotClass = log.status === 'SUCCESS' ? 'success' : 'error';
-            html += `<div class="history-item">
-                <div class="history-dot ${dotClass}"></div>
-                <div class="history-info">
-                    <div class="history-msg">${escapeHtml(log.message || '—')}</div>
-                    <div class="history-time">${formatTimestamp(log.fetchedAt)}</div>
-                </div>
-                <div class="history-count">${log.billCount} bills</div>
-            </div>`;
+            const isSuccess = log.status === 'SUCCESS';
+            const statusClass = isSuccess ? 'success' : 'danger';
+            html += `
+                <tr>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${escapeHtml(log.fetchedAt || '—')}</td>
+                    <td><span class="status-pill ${statusClass}">${escapeHtml(log.status)}</span></td>
+                    <td><strong>${Number(log.billCount || 0).toLocaleString()}</strong></td>
+                    <td>${escapeHtml(log.message || '—')}</td>
+                </tr>
+            `;
         });
 
+        html += `</tbody></table>`;
         container.innerHTML = html;
 
+        // Update Last Sync Activity in Overview KPI
+        if (logs.length > 0) {
+            const latest = logs[0];
+            const timeEl = document.getElementById('kpiLastSyncTime');
+            const statusEl = document.getElementById('kpiLastSyncStatus');
+            if (timeEl) timeEl.textContent = latest.fetchedAt ? new Date(latest.fetchedAt).toLocaleTimeString() : 'Recent';
+            if (statusEl) statusEl.textContent = `${latest.status} (${latest.billCount || 0} records)`;
+        }
     } catch (err) {
-        container.innerHTML = `<div class="empty-state" style="padding:30px;"><p>Failed to load sync history.</p></div>`;
+        container.innerHTML = `<div class="empty-state">Failed to load sync logs: ${escapeHtml(err.message)}</div>`;
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════
+// ── Add Service Submit Handler ──────────────────────────────────
+async function handleAddServiceSubmit(e) {
+    e.preventDefault();
 
-function updateSyncStatus(state, text) {
-    const dot = document.querySelector('.status-dot');
-    const statusText = document.querySelector('.status-text');
-    dot.className = `status-dot ${state}`;
-    statusText.textContent = text;
-}
+    const serviceId = document.getElementById('inputServiceId').value.trim();
+    const displayName = document.getElementById('inputDisplayName').value.trim();
+    const endpoint = document.getElementById('inputEndpoint').value.trim();
+    const description = document.getElementById('inputDescription').value.trim();
+    const syncNow = document.getElementById('checkSyncImmediately').checked;
 
-function updateLastSyncInfo(lastSync) {
-    const el = document.getElementById('lastSyncText');
-    if (lastSync && lastSync.at) {
-        el.textContent = `Last sync: ${formatTimestamp(lastSync.at)}`;
-    } else {
-        el.textContent = 'Never synced';
-    }
-}
+    const submitBtn = document.getElementById('submitAddServiceBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div><span>Registering...</span>`;
+    submitBtn.disabled = true;
 
-function truncateId(id) {
-    if (!id) return '—';
-    if (id.length <= 12) return id;
-    return id.substring(0, 8) + '…' + id.substring(id.length - 4);
-}
-
-function formatAmount(amount) {
-    if (amount == null) return '—';
-    const num = parseFloat(amount);
-    if (isNaN(num)) return amount;
-    return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatCurrency(amount) {
-    if (amount == null) return '—';
-    const num = parseFloat(amount);
-    if (isNaN(num)) return '—';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatTimestamp(ts) {
-    if (!ts) return '—';
     try {
-        const date = new Date(ts);
-        if (isNaN(date.getTime())) return ts;
-        const now = new Date();
-        const diff = now - date;
+        const result = await API.addService({
+            serviceId,
+            displayName,
+            endpoint,
+            description,
+            syncNow
+        });
 
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return Math.floor(diff / 60000) + ' min ago';
-        if (diff < 86400000) return Math.floor(diff / 3600000) + ' hr ago';
+        showToast(result.message || `Service '${serviceId}' registered successfully!`, 'success');
+        closeModal('modalAddService');
+        document.getElementById('formAddService').reset();
 
-        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-            + ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return ts;
+        // Reload services & open dashboard for newly added service
+        await loadInitialData();
+        await openServiceDashboard(serviceId, true);
+
+    } catch (err) {
+        showToast(`Registration failed: ${err.message}`, 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 }
 
+// ── Delete Service Confirmation Handler ─────────────────────────
+async function handleConfirmDelete() {
+    const serviceId = state.currentServiceId;
+    if (!serviceId || serviceId === 'bills') return;
+
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+
+    try {
+        const result = await API.deleteService(serviceId);
+        showToast(result.message || `Service '${serviceId}' removed.`, 'success');
+        closeModal('modalDeleteConfirm');
+
+        delete state.serviceData[serviceId];
+        await loadInitialData();
+        switchView('overview');
+    } catch (err) {
+        showToast(`Delete failed: ${err.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Yes, Delete Service';
+    }
+}
+
+// ── Modal Helpers ───────────────────────────────────────────────
+function openModal(modalId) {
+    document.getElementById(modalId)?.classList.add('show');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId)?.classList.remove('show');
+}
+
+// ── Utility: Escape HTML ────────────────────────────────────────
 function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }

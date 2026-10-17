@@ -27,8 +27,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import projectsap.sap.product.model.ProductMarketsItem;
-import projectsap.sap.product.model.ProductMetadata;
+import projectsap.sap.product.model.ProductBillTo;
+import projectsap.sap.product.model.ProductCancellationPolicy;
+import projectsap.sap.product.model.ProductCustomer;
+import projectsap.sap.product.model.ProductMarket;
+import projectsap.sap.product.model.ProductMetaData;
+import projectsap.sap.product.model.ProductPayer;
+import projectsap.sap.product.model.ProductShipTo;
+import projectsap.sap.product.model.ProductSnapshotsItem;
+import projectsap.sap.product.model.ProductSubscriptionProfile;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -36,323 +43,666 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Product
  */
 @JsonPropertyOrder({
-  Product.JSON_PROPERTY_ID,
-  Product.JSON_PROPERTY_CODE,
-  Product.JSON_PROPERTY_NAME,
-  Product.JSON_PROPERTY_DESCRIPTION,
-  Product.JSON_PROPERTY_SOLD_ELECTRONICALLY,
-  Product.JSON_PROPERTY_PUBLISHED,
-  Product.JSON_PROPERTY_PRODUCT_TYPE,
-  Product.JSON_PROPERTY_VERSION,
-  Product.JSON_PROPERTY_METADATA,
-  Product.JSON_PROPERTY_MARKETS,
+  Product.JSON_PROPERTY_META_DATA,
+  Product.JSON_PROPERTY_SUBSCRIPTION_DOCUMENT_ID,
+  Product.JSON_PROPERTY_SUBSCRIPTION_ID,
+  Product.JSON_PROPERTY_SUBSCRIPTION_PROFILE,
+  Product.JSON_PROPERTY_STATUS,
+  Product.JSON_PROPERTY_CUSTOMER,
+  Product.JSON_PROPERTY_PAYER,
+  Product.JSON_PROPERTY_SHIP_TO,
+  Product.JSON_PROPERTY_BILL_TO,
+  Product.JSON_PROPERTY_MARKET,
+  Product.JSON_PROPERTY_CURRENCY,
+  Product.JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE,
+  Product.JSON_PROPERTY_VALID_FROM,
+  Product.JSON_PROPERTY_BILLING_PROFILE_ID,
+  Product.JSON_PROPERTY_BILLING_CYCLE,
+  Product.JSON_PROPERTY_NEXT_SCHEDULED_BILLING_DATE,
+  Product.JSON_PROPERTY_BILLING_CYCLE_REFERENCE_DATE,
+  Product.JSON_PROPERTY_CANCELLATION_POLICY,
+  Product.JSON_PROPERTY_CANCELED_WITH_OVERRULED_TERMS,
+  Product.JSON_PROPERTY_PAUSE_SCHEDULE,
+  Product.JSON_PROPERTY_WITH_REFERENCE_TO_PRICING_SCHEME,
   Product.JSON_PROPERTY_CUSTOM_REFERENCES,
-  Product.JSON_PROPERTY_MIXINS,
-  Product.JSON_PROPERTY_NAMES,
-  Product.JSON_PROPERTY_DESCRIPTIONS
+  Product.JSON_PROPERTY_EXTERNAL_OBJECT_REFERENCES,
+  Product.JSON_PROPERTY_NOTIFICATION_SETTINGS,
+  Product.JSON_PROPERTY_IS_PENDING,
+  Product.JSON_PROPERTY_IS_FAILED,
+  Product.JSON_PROPERTY_IS_REJECTED,
+  Product.JSON_PROPERTY_CREATED_AT,
+  Product.JSON_PROPERTY_CHANGED_AT,
+  Product.JSON_PROPERTY_DOCUMENT_NUMBER,
+  Product.JSON_PROPERTY_SNAPSHOTS
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-09T22:59:29.848256200+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-10-15T17:59:46.907430400+05:30[Asia/Calcutta]", comments = "Generator version: 7.5.0")
 public class Product {
-  public static final String JSON_PROPERTY_ID = "id";
-  private String id;
+  public static final String JSON_PROPERTY_META_DATA = "metaData";
+  private ProductMetaData metaData;
 
-  public static final String JSON_PROPERTY_CODE = "code";
-  private String code;
+  public static final String JSON_PROPERTY_SUBSCRIPTION_DOCUMENT_ID = "subscriptionDocumentId";
+  private String subscriptionDocumentId;
 
-  public static final String JSON_PROPERTY_NAME = "name";
-  private String name;
+  public static final String JSON_PROPERTY_SUBSCRIPTION_ID = "subscriptionId";
+  private String subscriptionId;
 
-  public static final String JSON_PROPERTY_DESCRIPTION = "description";
-  private String description;
+  public static final String JSON_PROPERTY_SUBSCRIPTION_PROFILE = "subscriptionProfile";
+  private ProductSubscriptionProfile subscriptionProfile;
 
-  public static final String JSON_PROPERTY_SOLD_ELECTRONICALLY = "soldElectronically";
-  private Boolean soldElectronically;
+  public static final String JSON_PROPERTY_STATUS = "status";
+  private String status;
 
-  public static final String JSON_PROPERTY_PUBLISHED = "published";
-  private Boolean published;
+  public static final String JSON_PROPERTY_CUSTOMER = "customer";
+  private ProductCustomer customer;
 
-  public static final String JSON_PROPERTY_PRODUCT_TYPE = "productType";
-  private String productType;
+  public static final String JSON_PROPERTY_PAYER = "payer";
+  private ProductPayer payer;
 
-  public static final String JSON_PROPERTY_VERSION = "version";
-  private Integer version;
+  public static final String JSON_PROPERTY_SHIP_TO = "shipTo";
+  private ProductShipTo shipTo;
 
-  public static final String JSON_PROPERTY_METADATA = "metadata";
-  private ProductMetadata metadata;
+  public static final String JSON_PROPERTY_BILL_TO = "billTo";
+  private ProductBillTo billTo;
 
-  public static final String JSON_PROPERTY_MARKETS = "markets";
-  private List<ProductMarketsItem> markets = new ArrayList<>();
+  public static final String JSON_PROPERTY_MARKET = "market";
+  private ProductMarket market;
+
+  public static final String JSON_PROPERTY_CURRENCY = "currency";
+  private String currency;
+
+  public static final String JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE = "subscriptionTimeZone";
+  private String subscriptionTimeZone;
+
+  public static final String JSON_PROPERTY_VALID_FROM = "validFrom";
+  private String validFrom;
+
+  public static final String JSON_PROPERTY_BILLING_PROFILE_ID = "billingProfileId";
+  private String billingProfileId;
+
+  public static final String JSON_PROPERTY_BILLING_CYCLE = "billingCycle";
+  private String billingCycle;
+
+  public static final String JSON_PROPERTY_NEXT_SCHEDULED_BILLING_DATE = "nextScheduledBillingDate";
+  private String nextScheduledBillingDate;
+
+  public static final String JSON_PROPERTY_BILLING_CYCLE_REFERENCE_DATE = "billingCycleReferenceDate";
+  private String billingCycleReferenceDate;
+
+  public static final String JSON_PROPERTY_CANCELLATION_POLICY = "cancellationPolicy";
+  private ProductCancellationPolicy cancellationPolicy;
+
+  public static final String JSON_PROPERTY_CANCELED_WITH_OVERRULED_TERMS = "canceledWithOverruledTerms";
+  private Boolean canceledWithOverruledTerms;
+
+  public static final String JSON_PROPERTY_PAUSE_SCHEDULE = "pauseSchedule";
+  private List<Object> pauseSchedule = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_WITH_REFERENCE_TO_PRICING_SCHEME = "withReferenceToPricingScheme";
+  private Boolean withReferenceToPricingScheme;
 
   public static final String JSON_PROPERTY_CUSTOM_REFERENCES = "customReferences";
   private List<Object> customReferences = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_MIXINS = "mixins";
-  private Object mixins;
+  public static final String JSON_PROPERTY_EXTERNAL_OBJECT_REFERENCES = "externalObjectReferences";
+  private List<Object> externalObjectReferences = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_NAMES = "names";
-  private List<Object> names = new ArrayList<>();
+  public static final String JSON_PROPERTY_NOTIFICATION_SETTINGS = "notificationSettings";
+  private List<Object> notificationSettings = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_DESCRIPTIONS = "descriptions";
-  private List<Object> descriptions = new ArrayList<>();
+  public static final String JSON_PROPERTY_IS_PENDING = "isPending";
+  private Boolean isPending;
+
+  public static final String JSON_PROPERTY_IS_FAILED = "isFailed";
+  private Boolean isFailed;
+
+  public static final String JSON_PROPERTY_IS_REJECTED = "isRejected";
+  private Boolean isRejected;
+
+  public static final String JSON_PROPERTY_CREATED_AT = "createdAt";
+  private String createdAt;
+
+  public static final String JSON_PROPERTY_CHANGED_AT = "changedAt";
+  private String changedAt;
+
+  public static final String JSON_PROPERTY_DOCUMENT_NUMBER = "documentNumber";
+  private Integer documentNumber;
+
+  public static final String JSON_PROPERTY_SNAPSHOTS = "snapshots";
+  private List<ProductSnapshotsItem> snapshots = new ArrayList<>();
 
   public Product() { 
   }
 
-  public Product id(String id) {
-    this.id = id;
+  public Product metaData(ProductMetaData metaData) {
+    this.metaData = metaData;
     return this;
   }
 
    /**
-   * Get id
-   * @return id
+   * Get metaData
+   * @return metaData
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(JSON_PROPERTY_META_DATA)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getId() {
-    return id;
+  public ProductMetaData getMetaData() {
+    return metaData;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(JSON_PROPERTY_META_DATA)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setId(String id) {
-    this.id = id;
+  public void setMetaData(ProductMetaData metaData) {
+    this.metaData = metaData;
   }
 
 
-  public Product code(String code) {
-    this.code = code;
+  public Product subscriptionDocumentId(String subscriptionDocumentId) {
+    this.subscriptionDocumentId = subscriptionDocumentId;
     return this;
   }
 
    /**
-   * Get code
-   * @return code
+   * Get subscriptionDocumentId
+   * @return subscriptionDocumentId
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_CODE)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_DOCUMENT_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getCode() {
-    return code;
+  public String getSubscriptionDocumentId() {
+    return subscriptionDocumentId;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_CODE)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_DOCUMENT_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setCode(String code) {
-    this.code = code;
+  public void setSubscriptionDocumentId(String subscriptionDocumentId) {
+    this.subscriptionDocumentId = subscriptionDocumentId;
   }
 
 
-  public Product name(String name) {
-    this.name = name;
+  public Product subscriptionId(String subscriptionId) {
+    this.subscriptionId = subscriptionId;
     return this;
   }
 
    /**
-   * Get name
-   * @return name
+   * Get subscriptionId
+   * @return subscriptionId
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_NAME)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getName() {
-    return name;
+  public String getSubscriptionId() {
+    return subscriptionId;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_NAME)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_ID)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setName(String name) {
-    this.name = name;
+  public void setSubscriptionId(String subscriptionId) {
+    this.subscriptionId = subscriptionId;
   }
 
 
-  public Product description(String description) {
-    this.description = description;
+  public Product subscriptionProfile(ProductSubscriptionProfile subscriptionProfile) {
+    this.subscriptionProfile = subscriptionProfile;
     return this;
   }
 
    /**
-   * Get description
-   * @return description
+   * Get subscriptionProfile
+   * @return subscriptionProfile
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_PROFILE)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getDescription() {
-    return description;
+  public ProductSubscriptionProfile getSubscriptionProfile() {
+    return subscriptionProfile;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_PROFILE)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDescription(String description) {
-    this.description = description;
+  public void setSubscriptionProfile(ProductSubscriptionProfile subscriptionProfile) {
+    this.subscriptionProfile = subscriptionProfile;
   }
 
 
-  public Product soldElectronically(Boolean soldElectronically) {
-    this.soldElectronically = soldElectronically;
+  public Product status(String status) {
+    this.status = status;
     return this;
   }
 
    /**
-   * Get soldElectronically
-   * @return soldElectronically
+   * Get status
+   * @return status
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_SOLD_ELECTRONICALLY)
+  @JsonProperty(JSON_PROPERTY_STATUS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Boolean getSoldElectronically() {
-    return soldElectronically;
+  public String getStatus() {
+    return status;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_SOLD_ELECTRONICALLY)
+  @JsonProperty(JSON_PROPERTY_STATUS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setSoldElectronically(Boolean soldElectronically) {
-    this.soldElectronically = soldElectronically;
+  public void setStatus(String status) {
+    this.status = status;
   }
 
 
-  public Product published(Boolean published) {
-    this.published = published;
+  public Product customer(ProductCustomer customer) {
+    this.customer = customer;
     return this;
   }
 
    /**
-   * Get published
-   * @return published
+   * Get customer
+   * @return customer
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_PUBLISHED)
+  @JsonProperty(JSON_PROPERTY_CUSTOMER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Boolean getPublished() {
-    return published;
+  public ProductCustomer getCustomer() {
+    return customer;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_PUBLISHED)
+  @JsonProperty(JSON_PROPERTY_CUSTOMER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setPublished(Boolean published) {
-    this.published = published;
+  public void setCustomer(ProductCustomer customer) {
+    this.customer = customer;
   }
 
 
-  public Product productType(String productType) {
-    this.productType = productType;
+  public Product payer(ProductPayer payer) {
+    this.payer = payer;
     return this;
   }
 
    /**
-   * Get productType
-   * @return productType
+   * Get payer
+   * @return payer
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_PRODUCT_TYPE)
+  @JsonProperty(JSON_PROPERTY_PAYER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getProductType() {
-    return productType;
+  public ProductPayer getPayer() {
+    return payer;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_PRODUCT_TYPE)
+  @JsonProperty(JSON_PROPERTY_PAYER)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setProductType(String productType) {
-    this.productType = productType;
+  public void setPayer(ProductPayer payer) {
+    this.payer = payer;
   }
 
 
-  public Product version(Integer version) {
-    this.version = version;
+  public Product shipTo(ProductShipTo shipTo) {
+    this.shipTo = shipTo;
     return this;
   }
 
    /**
-   * Get version
-   * @return version
+   * Get shipTo
+   * @return shipTo
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_VERSION)
+  @JsonProperty(JSON_PROPERTY_SHIP_TO)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Integer getVersion() {
-    return version;
+  public ProductShipTo getShipTo() {
+    return shipTo;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_VERSION)
+  @JsonProperty(JSON_PROPERTY_SHIP_TO)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setVersion(Integer version) {
-    this.version = version;
+  public void setShipTo(ProductShipTo shipTo) {
+    this.shipTo = shipTo;
   }
 
 
-  public Product metadata(ProductMetadata metadata) {
-    this.metadata = metadata;
+  public Product billTo(ProductBillTo billTo) {
+    this.billTo = billTo;
     return this;
   }
 
    /**
-   * Get metadata
-   * @return metadata
+   * Get billTo
+   * @return billTo
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_METADATA)
+  @JsonProperty(JSON_PROPERTY_BILL_TO)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public ProductMetadata getMetadata() {
-    return metadata;
+  public ProductBillTo getBillTo() {
+    return billTo;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_METADATA)
+  @JsonProperty(JSON_PROPERTY_BILL_TO)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMetadata(ProductMetadata metadata) {
-    this.metadata = metadata;
+  public void setBillTo(ProductBillTo billTo) {
+    this.billTo = billTo;
   }
 
 
-  public Product markets(List<ProductMarketsItem> markets) {
-    this.markets = markets;
+  public Product market(ProductMarket market) {
+    this.market = market;
     return this;
   }
 
-  public Product addMarketsItem(ProductMarketsItem marketsItem) {
-    if (this.markets == null) {
-      this.markets = new ArrayList<>();
+   /**
+   * Get market
+   * @return market
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_MARKET)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public ProductMarket getMarket() {
+    return market;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_MARKET)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setMarket(ProductMarket market) {
+    this.market = market;
+  }
+
+
+  public Product currency(String currency) {
+    this.currency = currency;
+    return this;
+  }
+
+   /**
+   * Get currency
+   * @return currency
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CURRENCY)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getCurrency() {
+    return currency;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CURRENCY)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCurrency(String currency) {
+    this.currency = currency;
+  }
+
+
+  public Product subscriptionTimeZone(String subscriptionTimeZone) {
+    this.subscriptionTimeZone = subscriptionTimeZone;
+    return this;
+  }
+
+   /**
+   * Get subscriptionTimeZone
+   * @return subscriptionTimeZone
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getSubscriptionTimeZone() {
+    return subscriptionTimeZone;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_SUBSCRIPTION_TIME_ZONE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setSubscriptionTimeZone(String subscriptionTimeZone) {
+    this.subscriptionTimeZone = subscriptionTimeZone;
+  }
+
+
+  public Product validFrom(String validFrom) {
+    this.validFrom = validFrom;
+    return this;
+  }
+
+   /**
+   * Get validFrom
+   * @return validFrom
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_VALID_FROM)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getValidFrom() {
+    return validFrom;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_VALID_FROM)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setValidFrom(String validFrom) {
+    this.validFrom = validFrom;
+  }
+
+
+  public Product billingProfileId(String billingProfileId) {
+    this.billingProfileId = billingProfileId;
+    return this;
+  }
+
+   /**
+   * Get billingProfileId
+   * @return billingProfileId
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_BILLING_PROFILE_ID)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getBillingProfileId() {
+    return billingProfileId;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_BILLING_PROFILE_ID)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setBillingProfileId(String billingProfileId) {
+    this.billingProfileId = billingProfileId;
+  }
+
+
+  public Product billingCycle(String billingCycle) {
+    this.billingCycle = billingCycle;
+    return this;
+  }
+
+   /**
+   * Get billingCycle
+   * @return billingCycle
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_BILLING_CYCLE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getBillingCycle() {
+    return billingCycle;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_BILLING_CYCLE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setBillingCycle(String billingCycle) {
+    this.billingCycle = billingCycle;
+  }
+
+
+  public Product nextScheduledBillingDate(String nextScheduledBillingDate) {
+    this.nextScheduledBillingDate = nextScheduledBillingDate;
+    return this;
+  }
+
+   /**
+   * Get nextScheduledBillingDate
+   * @return nextScheduledBillingDate
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_NEXT_SCHEDULED_BILLING_DATE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getNextScheduledBillingDate() {
+    return nextScheduledBillingDate;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_NEXT_SCHEDULED_BILLING_DATE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setNextScheduledBillingDate(String nextScheduledBillingDate) {
+    this.nextScheduledBillingDate = nextScheduledBillingDate;
+  }
+
+
+  public Product billingCycleReferenceDate(String billingCycleReferenceDate) {
+    this.billingCycleReferenceDate = billingCycleReferenceDate;
+    return this;
+  }
+
+   /**
+   * Get billingCycleReferenceDate
+   * @return billingCycleReferenceDate
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_BILLING_CYCLE_REFERENCE_DATE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getBillingCycleReferenceDate() {
+    return billingCycleReferenceDate;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_BILLING_CYCLE_REFERENCE_DATE)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setBillingCycleReferenceDate(String billingCycleReferenceDate) {
+    this.billingCycleReferenceDate = billingCycleReferenceDate;
+  }
+
+
+  public Product cancellationPolicy(ProductCancellationPolicy cancellationPolicy) {
+    this.cancellationPolicy = cancellationPolicy;
+    return this;
+  }
+
+   /**
+   * Get cancellationPolicy
+   * @return cancellationPolicy
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CANCELLATION_POLICY)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public ProductCancellationPolicy getCancellationPolicy() {
+    return cancellationPolicy;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CANCELLATION_POLICY)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCancellationPolicy(ProductCancellationPolicy cancellationPolicy) {
+    this.cancellationPolicy = cancellationPolicy;
+  }
+
+
+  public Product canceledWithOverruledTerms(Boolean canceledWithOverruledTerms) {
+    this.canceledWithOverruledTerms = canceledWithOverruledTerms;
+    return this;
+  }
+
+   /**
+   * Get canceledWithOverruledTerms
+   * @return canceledWithOverruledTerms
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CANCELED_WITH_OVERRULED_TERMS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getCanceledWithOverruledTerms() {
+    return canceledWithOverruledTerms;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CANCELED_WITH_OVERRULED_TERMS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCanceledWithOverruledTerms(Boolean canceledWithOverruledTerms) {
+    this.canceledWithOverruledTerms = canceledWithOverruledTerms;
+  }
+
+
+  public Product pauseSchedule(List<Object> pauseSchedule) {
+    this.pauseSchedule = pauseSchedule;
+    return this;
+  }
+
+  public Product addPauseScheduleItem(Object pauseScheduleItem) {
+    if (this.pauseSchedule == null) {
+      this.pauseSchedule = new ArrayList<>();
     }
-    this.markets.add(marketsItem);
+    this.pauseSchedule.add(pauseScheduleItem);
     return this;
   }
 
    /**
-   * Get markets
-   * @return markets
+   * Get pauseSchedule
+   * @return pauseSchedule
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_MARKETS)
+  @JsonProperty(JSON_PROPERTY_PAUSE_SCHEDULE)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public List<ProductMarketsItem> getMarkets() {
-    return markets;
+  public List<Object> getPauseSchedule() {
+    return pauseSchedule;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_MARKETS)
+  @JsonProperty(JSON_PROPERTY_PAUSE_SCHEDULE)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMarkets(List<ProductMarketsItem> markets) {
-    this.markets = markets;
+  public void setPauseSchedule(List<Object> pauseSchedule) {
+    this.pauseSchedule = pauseSchedule;
+  }
+
+
+  public Product withReferenceToPricingScheme(Boolean withReferenceToPricingScheme) {
+    this.withReferenceToPricingScheme = withReferenceToPricingScheme;
+    return this;
+  }
+
+   /**
+   * Get withReferenceToPricingScheme
+   * @return withReferenceToPricingScheme
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_WITH_REFERENCE_TO_PRICING_SCHEME)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getWithReferenceToPricingScheme() {
+    return withReferenceToPricingScheme;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_WITH_REFERENCE_TO_PRICING_SCHEME)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setWithReferenceToPricingScheme(Boolean withReferenceToPricingScheme) {
+    this.withReferenceToPricingScheme = withReferenceToPricingScheme;
   }
 
 
@@ -389,94 +739,252 @@ public class Product {
   }
 
 
-  public Product mixins(Object mixins) {
-    this.mixins = mixins;
+  public Product externalObjectReferences(List<Object> externalObjectReferences) {
+    this.externalObjectReferences = externalObjectReferences;
     return this;
   }
 
-   /**
-   * Get mixins
-   * @return mixins
-  **/
-  @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_MIXINS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public Object getMixins() {
-    return mixins;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_MIXINS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMixins(Object mixins) {
-    this.mixins = mixins;
-  }
-
-
-  public Product names(List<Object> names) {
-    this.names = names;
-    return this;
-  }
-
-  public Product addNamesItem(Object namesItem) {
-    if (this.names == null) {
-      this.names = new ArrayList<>();
+  public Product addExternalObjectReferencesItem(Object externalObjectReferencesItem) {
+    if (this.externalObjectReferences == null) {
+      this.externalObjectReferences = new ArrayList<>();
     }
-    this.names.add(namesItem);
+    this.externalObjectReferences.add(externalObjectReferencesItem);
     return this;
   }
 
    /**
-   * Get names
-   * @return names
+   * Get externalObjectReferences
+   * @return externalObjectReferences
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_NAMES)
+  @JsonProperty(JSON_PROPERTY_EXTERNAL_OBJECT_REFERENCES)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public List<Object> getNames() {
-    return names;
+  public List<Object> getExternalObjectReferences() {
+    return externalObjectReferences;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_NAMES)
+  @JsonProperty(JSON_PROPERTY_EXTERNAL_OBJECT_REFERENCES)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setNames(List<Object> names) {
-    this.names = names;
+  public void setExternalObjectReferences(List<Object> externalObjectReferences) {
+    this.externalObjectReferences = externalObjectReferences;
   }
 
 
-  public Product descriptions(List<Object> descriptions) {
-    this.descriptions = descriptions;
+  public Product notificationSettings(List<Object> notificationSettings) {
+    this.notificationSettings = notificationSettings;
     return this;
   }
 
-  public Product addDescriptionsItem(Object descriptionsItem) {
-    if (this.descriptions == null) {
-      this.descriptions = new ArrayList<>();
+  public Product addNotificationSettingsItem(Object notificationSettingsItem) {
+    if (this.notificationSettings == null) {
+      this.notificationSettings = new ArrayList<>();
     }
-    this.descriptions.add(descriptionsItem);
+    this.notificationSettings.add(notificationSettingsItem);
     return this;
   }
 
    /**
-   * Get descriptions
-   * @return descriptions
+   * Get notificationSettings
+   * @return notificationSettings
   **/
   @javax.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_DESCRIPTIONS)
+  @JsonProperty(JSON_PROPERTY_NOTIFICATION_SETTINGS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public List<Object> getDescriptions() {
-    return descriptions;
+  public List<Object> getNotificationSettings() {
+    return notificationSettings;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_DESCRIPTIONS)
+  @JsonProperty(JSON_PROPERTY_NOTIFICATION_SETTINGS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDescriptions(List<Object> descriptions) {
-    this.descriptions = descriptions;
+  public void setNotificationSettings(List<Object> notificationSettings) {
+    this.notificationSettings = notificationSettings;
+  }
+
+
+  public Product isPending(Boolean isPending) {
+    this.isPending = isPending;
+    return this;
+  }
+
+   /**
+   * Get isPending
+   * @return isPending
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_IS_PENDING)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getIsPending() {
+    return isPending;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_IS_PENDING)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setIsPending(Boolean isPending) {
+    this.isPending = isPending;
+  }
+
+
+  public Product isFailed(Boolean isFailed) {
+    this.isFailed = isFailed;
+    return this;
+  }
+
+   /**
+   * Get isFailed
+   * @return isFailed
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_IS_FAILED)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getIsFailed() {
+    return isFailed;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_IS_FAILED)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setIsFailed(Boolean isFailed) {
+    this.isFailed = isFailed;
+  }
+
+
+  public Product isRejected(Boolean isRejected) {
+    this.isRejected = isRejected;
+    return this;
+  }
+
+   /**
+   * Get isRejected
+   * @return isRejected
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_IS_REJECTED)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getIsRejected() {
+    return isRejected;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_IS_REJECTED)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setIsRejected(Boolean isRejected) {
+    this.isRejected = isRejected;
+  }
+
+
+  public Product createdAt(String createdAt) {
+    this.createdAt = createdAt;
+    return this;
+  }
+
+   /**
+   * Get createdAt
+   * @return createdAt
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CREATED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getCreatedAt() {
+    return createdAt;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CREATED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCreatedAt(String createdAt) {
+    this.createdAt = createdAt;
+  }
+
+
+  public Product changedAt(String changedAt) {
+    this.changedAt = changedAt;
+    return this;
+  }
+
+   /**
+   * Get changedAt
+   * @return changedAt
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getChangedAt() {
+    return changedAt;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_CHANGED_AT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setChangedAt(String changedAt) {
+    this.changedAt = changedAt;
+  }
+
+
+  public Product documentNumber(Integer documentNumber) {
+    this.documentNumber = documentNumber;
+    return this;
+  }
+
+   /**
+   * Get documentNumber
+   * @return documentNumber
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_DOCUMENT_NUMBER)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Integer getDocumentNumber() {
+    return documentNumber;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_DOCUMENT_NUMBER)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setDocumentNumber(Integer documentNumber) {
+    this.documentNumber = documentNumber;
+  }
+
+
+  public Product snapshots(List<ProductSnapshotsItem> snapshots) {
+    this.snapshots = snapshots;
+    return this;
+  }
+
+  public Product addSnapshotsItem(ProductSnapshotsItem snapshotsItem) {
+    if (this.snapshots == null) {
+      this.snapshots = new ArrayList<>();
+    }
+    this.snapshots.add(snapshotsItem);
+    return this;
+  }
+
+   /**
+   * Get snapshots
+   * @return snapshots
+  **/
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_SNAPSHOTS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public List<ProductSnapshotsItem> getSnapshots() {
+    return snapshots;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_SNAPSHOTS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setSnapshots(List<ProductSnapshotsItem> snapshots) {
+    this.snapshots = snapshots;
   }
 
 
@@ -492,45 +1000,79 @@ public class Product {
       return false;
     }
     Product product = (Product) o;
-    return Objects.equals(this.id, product.id) &&
-        Objects.equals(this.code, product.code) &&
-        Objects.equals(this.name, product.name) &&
-        Objects.equals(this.description, product.description) &&
-        Objects.equals(this.soldElectronically, product.soldElectronically) &&
-        Objects.equals(this.published, product.published) &&
-        Objects.equals(this.productType, product.productType) &&
-        Objects.equals(this.version, product.version) &&
-        Objects.equals(this.metadata, product.metadata) &&
-        Objects.equals(this.markets, product.markets) &&
+    return Objects.equals(this.metaData, product.metaData) &&
+        Objects.equals(this.subscriptionDocumentId, product.subscriptionDocumentId) &&
+        Objects.equals(this.subscriptionId, product.subscriptionId) &&
+        Objects.equals(this.subscriptionProfile, product.subscriptionProfile) &&
+        Objects.equals(this.status, product.status) &&
+        Objects.equals(this.customer, product.customer) &&
+        Objects.equals(this.payer, product.payer) &&
+        Objects.equals(this.shipTo, product.shipTo) &&
+        Objects.equals(this.billTo, product.billTo) &&
+        Objects.equals(this.market, product.market) &&
+        Objects.equals(this.currency, product.currency) &&
+        Objects.equals(this.subscriptionTimeZone, product.subscriptionTimeZone) &&
+        Objects.equals(this.validFrom, product.validFrom) &&
+        Objects.equals(this.billingProfileId, product.billingProfileId) &&
+        Objects.equals(this.billingCycle, product.billingCycle) &&
+        Objects.equals(this.nextScheduledBillingDate, product.nextScheduledBillingDate) &&
+        Objects.equals(this.billingCycleReferenceDate, product.billingCycleReferenceDate) &&
+        Objects.equals(this.cancellationPolicy, product.cancellationPolicy) &&
+        Objects.equals(this.canceledWithOverruledTerms, product.canceledWithOverruledTerms) &&
+        Objects.equals(this.pauseSchedule, product.pauseSchedule) &&
+        Objects.equals(this.withReferenceToPricingScheme, product.withReferenceToPricingScheme) &&
         Objects.equals(this.customReferences, product.customReferences) &&
-        Objects.equals(this.mixins, product.mixins) &&
-        Objects.equals(this.names, product.names) &&
-        Objects.equals(this.descriptions, product.descriptions);
+        Objects.equals(this.externalObjectReferences, product.externalObjectReferences) &&
+        Objects.equals(this.notificationSettings, product.notificationSettings) &&
+        Objects.equals(this.isPending, product.isPending) &&
+        Objects.equals(this.isFailed, product.isFailed) &&
+        Objects.equals(this.isRejected, product.isRejected) &&
+        Objects.equals(this.createdAt, product.createdAt) &&
+        Objects.equals(this.changedAt, product.changedAt) &&
+        Objects.equals(this.documentNumber, product.documentNumber) &&
+        Objects.equals(this.snapshots, product.snapshots);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, code, name, description, soldElectronically, published, productType, version, metadata, markets, customReferences, mixins, names, descriptions);
+    return Objects.hash(metaData, subscriptionDocumentId, subscriptionId, subscriptionProfile, status, customer, payer, shipTo, billTo, market, currency, subscriptionTimeZone, validFrom, billingProfileId, billingCycle, nextScheduledBillingDate, billingCycleReferenceDate, cancellationPolicy, canceledWithOverruledTerms, pauseSchedule, withReferenceToPricingScheme, customReferences, externalObjectReferences, notificationSettings, isPending, isFailed, isRejected, createdAt, changedAt, documentNumber, snapshots);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Product {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
-    sb.append("    code: ").append(toIndentedString(code)).append("\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    soldElectronically: ").append(toIndentedString(soldElectronically)).append("\n");
-    sb.append("    published: ").append(toIndentedString(published)).append("\n");
-    sb.append("    productType: ").append(toIndentedString(productType)).append("\n");
-    sb.append("    version: ").append(toIndentedString(version)).append("\n");
-    sb.append("    metadata: ").append(toIndentedString(metadata)).append("\n");
-    sb.append("    markets: ").append(toIndentedString(markets)).append("\n");
+    sb.append("    metaData: ").append(toIndentedString(metaData)).append("\n");
+    sb.append("    subscriptionDocumentId: ").append(toIndentedString(subscriptionDocumentId)).append("\n");
+    sb.append("    subscriptionId: ").append(toIndentedString(subscriptionId)).append("\n");
+    sb.append("    subscriptionProfile: ").append(toIndentedString(subscriptionProfile)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
+    sb.append("    customer: ").append(toIndentedString(customer)).append("\n");
+    sb.append("    payer: ").append(toIndentedString(payer)).append("\n");
+    sb.append("    shipTo: ").append(toIndentedString(shipTo)).append("\n");
+    sb.append("    billTo: ").append(toIndentedString(billTo)).append("\n");
+    sb.append("    market: ").append(toIndentedString(market)).append("\n");
+    sb.append("    currency: ").append(toIndentedString(currency)).append("\n");
+    sb.append("    subscriptionTimeZone: ").append(toIndentedString(subscriptionTimeZone)).append("\n");
+    sb.append("    validFrom: ").append(toIndentedString(validFrom)).append("\n");
+    sb.append("    billingProfileId: ").append(toIndentedString(billingProfileId)).append("\n");
+    sb.append("    billingCycle: ").append(toIndentedString(billingCycle)).append("\n");
+    sb.append("    nextScheduledBillingDate: ").append(toIndentedString(nextScheduledBillingDate)).append("\n");
+    sb.append("    billingCycleReferenceDate: ").append(toIndentedString(billingCycleReferenceDate)).append("\n");
+    sb.append("    cancellationPolicy: ").append(toIndentedString(cancellationPolicy)).append("\n");
+    sb.append("    canceledWithOverruledTerms: ").append(toIndentedString(canceledWithOverruledTerms)).append("\n");
+    sb.append("    pauseSchedule: ").append(toIndentedString(pauseSchedule)).append("\n");
+    sb.append("    withReferenceToPricingScheme: ").append(toIndentedString(withReferenceToPricingScheme)).append("\n");
     sb.append("    customReferences: ").append(toIndentedString(customReferences)).append("\n");
-    sb.append("    mixins: ").append(toIndentedString(mixins)).append("\n");
-    sb.append("    names: ").append(toIndentedString(names)).append("\n");
-    sb.append("    descriptions: ").append(toIndentedString(descriptions)).append("\n");
+    sb.append("    externalObjectReferences: ").append(toIndentedString(externalObjectReferences)).append("\n");
+    sb.append("    notificationSettings: ").append(toIndentedString(notificationSettings)).append("\n");
+    sb.append("    isPending: ").append(toIndentedString(isPending)).append("\n");
+    sb.append("    isFailed: ").append(toIndentedString(isFailed)).append("\n");
+    sb.append("    isRejected: ").append(toIndentedString(isRejected)).append("\n");
+    sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
+    sb.append("    changedAt: ").append(toIndentedString(changedAt)).append("\n");
+    sb.append("    documentNumber: ").append(toIndentedString(documentNumber)).append("\n");
+    sb.append("    snapshots: ").append(toIndentedString(snapshots)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -578,59 +1120,113 @@ public class Product {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format("%sid%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `metaData` to the URL query string
+    if (getMetaData() != null) {
+      joiner.add(getMetaData().toUrlQueryString(prefix + "metaData" + suffix));
     }
 
-    // add `code` to the URL query string
-    if (getCode() != null) {
-      joiner.add(String.format("%scode%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCode()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `subscriptionDocumentId` to the URL query string
+    if (getSubscriptionDocumentId() != null) {
+      joiner.add(String.format("%ssubscriptionDocumentId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSubscriptionDocumentId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `name` to the URL query string
-    if (getName() != null) {
-      joiner.add(String.format("%sname%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getName()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `subscriptionId` to the URL query string
+    if (getSubscriptionId() != null) {
+      joiner.add(String.format("%ssubscriptionId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSubscriptionId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `description` to the URL query string
-    if (getDescription() != null) {
-      joiner.add(String.format("%sdescription%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getDescription()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `subscriptionProfile` to the URL query string
+    if (getSubscriptionProfile() != null) {
+      joiner.add(getSubscriptionProfile().toUrlQueryString(prefix + "subscriptionProfile" + suffix));
     }
 
-    // add `soldElectronically` to the URL query string
-    if (getSoldElectronically() != null) {
-      joiner.add(String.format("%ssoldElectronically%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSoldElectronically()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `status` to the URL query string
+    if (getStatus() != null) {
+      joiner.add(String.format("%sstatus%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getStatus()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
-    // add `published` to the URL query string
-    if (getPublished() != null) {
-      joiner.add(String.format("%spublished%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getPublished()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `customer` to the URL query string
+    if (getCustomer() != null) {
+      joiner.add(getCustomer().toUrlQueryString(prefix + "customer" + suffix));
     }
 
-    // add `productType` to the URL query string
-    if (getProductType() != null) {
-      joiner.add(String.format("%sproductType%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getProductType()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `payer` to the URL query string
+    if (getPayer() != null) {
+      joiner.add(getPayer().toUrlQueryString(prefix + "payer" + suffix));
     }
 
-    // add `version` to the URL query string
-    if (getVersion() != null) {
-      joiner.add(String.format("%sversion%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getVersion()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    // add `shipTo` to the URL query string
+    if (getShipTo() != null) {
+      joiner.add(getShipTo().toUrlQueryString(prefix + "shipTo" + suffix));
     }
 
-    // add `metadata` to the URL query string
-    if (getMetadata() != null) {
-      joiner.add(getMetadata().toUrlQueryString(prefix + "metadata" + suffix));
+    // add `billTo` to the URL query string
+    if (getBillTo() != null) {
+      joiner.add(getBillTo().toUrlQueryString(prefix + "billTo" + suffix));
     }
 
-    // add `markets` to the URL query string
-    if (getMarkets() != null) {
-      for (int i = 0; i < getMarkets().size(); i++) {
-        if (getMarkets().get(i) != null) {
-          joiner.add(getMarkets().get(i).toUrlQueryString(String.format("%smarkets%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix))));
-        }
+    // add `market` to the URL query string
+    if (getMarket() != null) {
+      joiner.add(getMarket().toUrlQueryString(prefix + "market" + suffix));
+    }
+
+    // add `currency` to the URL query string
+    if (getCurrency() != null) {
+      joiner.add(String.format("%scurrency%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCurrency()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `subscriptionTimeZone` to the URL query string
+    if (getSubscriptionTimeZone() != null) {
+      joiner.add(String.format("%ssubscriptionTimeZone%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getSubscriptionTimeZone()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `validFrom` to the URL query string
+    if (getValidFrom() != null) {
+      joiner.add(String.format("%svalidFrom%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getValidFrom()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `billingProfileId` to the URL query string
+    if (getBillingProfileId() != null) {
+      joiner.add(String.format("%sbillingProfileId%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getBillingProfileId()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `billingCycle` to the URL query string
+    if (getBillingCycle() != null) {
+      joiner.add(String.format("%sbillingCycle%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getBillingCycle()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `nextScheduledBillingDate` to the URL query string
+    if (getNextScheduledBillingDate() != null) {
+      joiner.add(String.format("%snextScheduledBillingDate%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getNextScheduledBillingDate()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `billingCycleReferenceDate` to the URL query string
+    if (getBillingCycleReferenceDate() != null) {
+      joiner.add(String.format("%sbillingCycleReferenceDate%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getBillingCycleReferenceDate()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `cancellationPolicy` to the URL query string
+    if (getCancellationPolicy() != null) {
+      joiner.add(getCancellationPolicy().toUrlQueryString(prefix + "cancellationPolicy" + suffix));
+    }
+
+    // add `canceledWithOverruledTerms` to the URL query string
+    if (getCanceledWithOverruledTerms() != null) {
+      joiner.add(String.format("%scanceledWithOverruledTerms%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCanceledWithOverruledTerms()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `pauseSchedule` to the URL query string
+    if (getPauseSchedule() != null) {
+      for (int i = 0; i < getPauseSchedule().size(); i++) {
+        joiner.add(String.format("%spauseSchedule%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix),
+            URLEncoder.encode(String.valueOf(getPauseSchedule().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
       }
+    }
+
+    // add `withReferenceToPricingScheme` to the URL query string
+    if (getWithReferenceToPricingScheme() != null) {
+      joiner.add(String.format("%swithReferenceToPricingScheme%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getWithReferenceToPricingScheme()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
     }
 
     // add `customReferences` to the URL query string
@@ -642,26 +1238,61 @@ public class Product {
       }
     }
 
-    // add `mixins` to the URL query string
-    if (getMixins() != null) {
-      joiner.add(String.format("%smixins%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getMixins()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
-    }
-
-    // add `names` to the URL query string
-    if (getNames() != null) {
-      for (int i = 0; i < getNames().size(); i++) {
-        joiner.add(String.format("%snames%s%s=%s", prefix, suffix,
+    // add `externalObjectReferences` to the URL query string
+    if (getExternalObjectReferences() != null) {
+      for (int i = 0; i < getExternalObjectReferences().size(); i++) {
+        joiner.add(String.format("%sexternalObjectReferences%s%s=%s", prefix, suffix,
             "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix),
-            URLEncoder.encode(String.valueOf(getNames().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+            URLEncoder.encode(String.valueOf(getExternalObjectReferences().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
       }
     }
 
-    // add `descriptions` to the URL query string
-    if (getDescriptions() != null) {
-      for (int i = 0; i < getDescriptions().size(); i++) {
-        joiner.add(String.format("%sdescriptions%s%s=%s", prefix, suffix,
+    // add `notificationSettings` to the URL query string
+    if (getNotificationSettings() != null) {
+      for (int i = 0; i < getNotificationSettings().size(); i++) {
+        joiner.add(String.format("%snotificationSettings%s%s=%s", prefix, suffix,
             "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix),
-            URLEncoder.encode(String.valueOf(getDescriptions().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+            URLEncoder.encode(String.valueOf(getNotificationSettings().get(i)), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+      }
+    }
+
+    // add `isPending` to the URL query string
+    if (getIsPending() != null) {
+      joiner.add(String.format("%sisPending%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getIsPending()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `isFailed` to the URL query string
+    if (getIsFailed() != null) {
+      joiner.add(String.format("%sisFailed%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getIsFailed()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `isRejected` to the URL query string
+    if (getIsRejected() != null) {
+      joiner.add(String.format("%sisRejected%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getIsRejected()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `createdAt` to the URL query string
+    if (getCreatedAt() != null) {
+      joiner.add(String.format("%screatedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getCreatedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `changedAt` to the URL query string
+    if (getChangedAt() != null) {
+      joiner.add(String.format("%schangedAt%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getChangedAt()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `documentNumber` to the URL query string
+    if (getDocumentNumber() != null) {
+      joiner.add(String.format("%sdocumentNumber%s=%s", prefix, suffix, URLEncoder.encode(String.valueOf(getDocumentNumber()), StandardCharsets.UTF_8).replaceAll("\\+", "%20")));
+    }
+
+    // add `snapshots` to the URL query string
+    if (getSnapshots() != null) {
+      for (int i = 0; i < getSnapshots().size(); i++) {
+        if (getSnapshots().get(i) != null) {
+          joiner.add(getSnapshots().get(i).toUrlQueryString(String.format("%ssnapshots%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format("%s%d%s", containerPrefix, i, containerSuffix))));
+        }
       }
     }
 

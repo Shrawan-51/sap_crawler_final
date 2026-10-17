@@ -765,6 +765,24 @@ public class DatabaseManager {
     }
 
     /**
+     * Drops the table associated with a service (protects core tables like 'bills' and 'fetch_log').
+     */
+    public static boolean deleteServiceTable(String serviceName) {
+        String tableName = resolveTableName(serviceName);
+        if ("bills".equalsIgnoreCase(tableName) || "fetch_log".equalsIgnoreCase(tableName)) {
+            return false;
+        }
+        try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS " + tableName);
+            LOGGER.info("Dropped service table '{}' successfully from {}.", tableName, dbEngineName);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to drop service table '{}': {}", tableName, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
      * Binds typed Bill POJO properties to the SQL PreparedStatement.
      */
     private static void setBillParams(PreparedStatement ps, Bill bill, String rawJson, boolean isInsert) throws SQLException {
