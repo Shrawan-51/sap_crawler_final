@@ -330,5 +330,24 @@ Or test specific POJO conversions:
 
 ---
 
+## 13. Future Enhancements
+
+The following enhancements could further improve the scalability, reliability, and usability of the SAP Subscription Billing Crawler and Analytics Engine.
+
+- **Enhanced Data Validation:** Introduce configurable validation rules to identify missing fields, duplicate records, and inconsistent data types before persistence.
+
+- **Schema Change Detection:** Compare newly inferred SAP API schemas with previously generated specifications to identify added, removed, or modified fields.
+
+- **Advanced Synchronization Monitoring:** Extend synchronization logs with detailed failure reasons, execution duration, retry history, and last successful synchronization timestamps.
+
+- **Incremental Data Synchronization:** Fetch and process only newly created or modified records where supported by the SAP API, reducing unnecessary network requests and database operations.
+
+- **Automated Testing and Continuous Integration:** Expand automated test coverage and integrate build verification into a CI/CD workflow to detect regressions before deployment.
+
+- **Role-Based Access Control:** Introduce authentication and role-based permissions to restrict access to synchronization operations, service configuration, and sensitive billing data.
+
+These enhancements represent potential future development directions and are not claimed as implemented features of the current release.
+
+
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
